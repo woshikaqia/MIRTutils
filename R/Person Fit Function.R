@@ -14,8 +14,6 @@
 # *** Its okay to treat SA item as clusters. To do so, simply store them in the "Cluster_parm" argument with 0 variances, and store all student responses in "Cluster_dat"
 # *** This function can be run for all students in one shot. Not recommended when number of students is large. It's faster to run one student at a time using parallel processing 
 ##########################################################################################################
-source("J:\\NGSS\\Zhongtian\\R code\\Person fit\\function\\Observed Data Marginal Likelihood Function.R")
-source("J:\\NGSS\\Zhongtian\\R code\\Item info\\LW Function.R")
 person.fit = function(theta, SA_dat=NULL, Cluster_dat=NULL, SA_parm=NULL, Cluster_parm=NULL, Dv=1, n.nodes = 21) {
   if(is.null(SA_parm) & is.null(Cluster_parm)) {stop("No item found!!!")} 
   if(is.null(SA_dat) & is.null(Cluster_dat)) {stop("No data found!!!")} 
