@@ -17,15 +17,18 @@
 #' probs.SA: \tabular{ll}{\tab probablity table of correct response for standalones}
 #' probs.cluster \tabular{ll}{\tab (conditional) probablity table of correct response for clusters at each given node}
 #' @param missing_as_incorrect by default, missings (NAs) are treated as missing; if TRUE, missings are treated as incorrect
+#'
 #' @return If \emph{return_additional} is FALSE, returns a dataframe with two columns: theta and marginalized data loglikelihood; \cr
 #' If \emph{return_additional} is TRUE, returns the dataframe of loglikelihood plus additional tables \emph{probs.SA} and \emph{probs.cluster} in a list
-#' @export
+#'
+#' @author Zhongtian Lin lzt713@gmail.com
+#'
 #'
 #' @note If the test does not have SA items or Cluster items, use default (NULL) for the corresponding data and parameter arguments \cr\cr
 #' SA items can be treated as clusters. To do so, store SA item parameters in the "Cluster_parm" argument with 0 variances, and store all student responses in "Cluster_dat"
 #' @examples
 #'
-#'
+#'@export
 obs.data.loglik = function(theta, SA_dat=NULL, Cluster_dat=NULL, SA_parm=NULL, Cluster_parm=NULL, Dv=1, n.nodes = 21, return_additional=F, missing_as_incorrect = F) {
   if(is.null(SA_parm) & is.null(Cluster_parm)) {stop("No item found!!!")}
   if(is.null(SA_dat) & is.null(Cluster_dat)) {stop("No data found!!!")}

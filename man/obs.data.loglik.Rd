@@ -54,5 +54,7 @@ SA items can be treated as clusters. To do so, store SA item parameters in the "
 }
 \examples{
 
-
+}
+\author{
+Zhongtian Lin lzt713@gmail.com
 }
