@@ -5,15 +5,15 @@
 #' @param theta a scalar or a vector of student ability
 #' @param SA_dat For one student: a vector of responses to standalone items \cr\cr
 #' For two or more students: a matrix or dataframe of responses to standalone items. One assertion per column. Column order must match row order in SA_parm \cr\cr
-#' Use NA for missing reponses
+#' Use NA for missing responses
 #' @param Cluster_dat For one student: a vector of responses to cluster items \cr\cr
 #' For two or more students: a matrix or dataframe of responses to cluster items. One assertion per column. Column order must match row order in Cluster_parm \cr\cr
-#' Use NA for missing reponses
+#' Use NA for missing responses
 #' @param SA_parm a matrix or dataframe of a,b,g parameters (column must be in this order), ItemID, and Assertion_ID for SA items
 #' @param Cluster_parm a matrix or dataframe with columns of a, b and variance parameters for each assertion, as well as a column of cluster position, a column of cluster ItemID, and a column of Assertion_ID for Cluster items
 #' @param Dv scaling factor for IRT model [use 1 or 1.7]
 #' @param n.nodes number of nodes used when integrating out the specific dimension
-#' @param return_additional if TRUE, return a list of the loglik plus some additional by-product of the function such as: \cr\cr
+#' @param return_additional if TRUE, return a list that contains loglik plus some additional by-product of the function such as: \cr\cr
 #' probs.SA: \tabular{ll}{\tab probablity table of correct response for standalones}
 #' probs.cluster \tabular{ll}{\tab (conditional) probablity table of correct response for clusters at each given node}
 #' @param missing_as_incorrect by default, missings (NAs) are treated as missing; if TRUE, missings are treated as incorrect
@@ -58,7 +58,7 @@ obs.data.loglik = function(theta, SA_dat=NULL, Cluster_dat=NULL, SA_parm=NULL, C
     b.parm = rep(1,length(theta)) %o% b
     g.parm = rep(1,length(theta)) %o% g
     theta.parm = theta %o% rep(1,length(b))
-    lin_pred_SA = Dv * (theta.parm * a.parm - b.parm)
+    lin_pred_SA = Dv * a.parm * (theta.parm - b.parm)
     probs.SA = g.parm + (1 - g.parm) * plogis(lin_pred_SA)
     lik_table_observed = as.data.frame(matrix(dbinom(SA_dat,1,probs.SA), nrow = length(theta)))
     colnames(lik_table_observed) = SA_parm$Assertion_ID
@@ -88,8 +88,7 @@ obs.data.loglik = function(theta, SA_dat=NULL, Cluster_dat=NULL, SA_parm=NULL, C
       All_thetas = outer(theta, rescaled.nodes, "+")
       ma = one_cluster_parm$a # a parameters for these assertions
       mb = one_cluster_parm$b # b parameters for these assertions
-      mtheta = theta  # students' theta in a vector
-      a_long = rep(ma, each = dim(All_thetas)[1] * dim(All_thetas)[2])  # each value of 5-element b parameter vector repeated [person by nodes] times
+      a_long = rep(ma, each = dim(All_thetas)[1] * dim(All_thetas)[2])  # each value of b parameter vector repeated [person by nodes] times
       b_long = rep(mb, each = dim(All_thetas)[1] * dim(All_thetas)[2])
       lin_pred_cluster = Dv * a_long * (All_thetas - b_long) # a*(theta + u - b) for all theta, all nodes of u, and all assertions [person by nodes by assertion]
       probs[[k]] = plogis(lin_pred_cluster)
