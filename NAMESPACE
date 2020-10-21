@@ -3,6 +3,7 @@
 export(data_loglik)
 export(item_residual)
 export(lord_wing)
+export(mmult)
 export(person_fit)
 export(scoring)
 export(sim_data)

@@ -1,7 +1,13 @@
 #include <Rcpp.h>
 using namespace Rcpp;
 
-
+//' A specialized matrix multiplication
+//' @description A specialized matrix multiplication function used in person_fit() while calculating the variance of
+//' loglikelihodd for cluster items
+//' @param m, a numeric matrix
+//' @param v, a numeric vector
+//' @author Zhongtian Lin lzt713@gmail.com
+//' @export
 // [[Rcpp::export]]
 NumericMatrix mmult(NumericMatrix m , NumericVector v) {
   if( m.ncol() != v.size() ) stop("Non-conformable arrays") ;
