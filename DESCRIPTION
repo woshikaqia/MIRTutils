@@ -18,3 +18,5 @@ LazyData: true
 RoxygenNote: 7.1.1
 URL: https://github.com/woshikaqia/MIRTutils
 BugReports: https://github.com/woshikaqia/MIRTutils/issues
+LinkingTo: 
+    Rcpp
