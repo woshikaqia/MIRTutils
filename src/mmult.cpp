@@ -8,6 +8,7 @@ using namespace Rcpp;
 //' @param v, a numeric vector
 //' @author Zhongtian Lin lzt713@gmail.com
 //' @export
+//' @import Rcpp
 // [[Rcpp::export]]
 NumericMatrix mmult(NumericMatrix m , NumericVector v) {
   if( m.ncol() != v.size() ) stop("Non-conformable arrays") ;

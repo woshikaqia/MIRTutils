@@ -8,6 +8,7 @@
 #' @param v, a numeric vector
 #' @author Zhongtian Lin lzt713@gmail.com
 #' @export
+#' @import Rcpp
 mmult <- function(m, v) {
     .Call('_MIRTutils_mmult', PACKAGE = 'MIRTutils', m, v)
 }
