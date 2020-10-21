@@ -1,35 +1,52 @@
-####################  Item score residual ##########################################
-## Description: item score - expected item score. Item score for a testlet model item is 
-##              summed raw score of all assertions in the testlet, and expected item score is
-##              the expected raw score calculated with Lord-Wingersky algorithm (see utility function for details)
-##
-## Dependency: utility()
-##
-## INPUT: 
-## 1. theta: a vector of thetas or a scalar value of theta
-## 2. SA_dat: (use NA for missing reponses)
-# For one student, a vector of response
-# For more than one student: a matrix or dataframe of response to standalone items. One assertion per column. Column order must match row order in SA_parm
-## 3. Cluster_dat: (use NA for missing reponses)
-# For one student, a vector of response
-# For more than one student: a matrix or dataframe of student response cluster items. One assertion per column. Column order must match row order in Cluster_parm
-## 4. SA_parm: a matrix or dataframe of a,b,g parameters (column must be in this order), ItemID, and Assertion_ID for SA items
-## 5. Cluster_parm: a matrix or dataframe of a,b and variance parameters for each assertion, a column of cluster position, a column of cluster ItemID, and a column of Assertion_ID for Cluster items
-## 6. Dv: scaling factor for IRT model [1 or 1.7]
-## 7. n.nodes: number of nodes used when integrating out the specific dimension 
-## 8. missing_as_incorrect: by default, missings (NAs) are treated as missing; if TRUE, missings are treated as incorrect 
-# *** Its okay to treat SA item as clusters. To do so, simply store them in the "Cluster_parm" argument with 0 variances, and store all student responses in "Cluster_dat"
-##########################################################################################################
+#' Item score residual
+#' @description Compute item score residual (i.e., item score \code{-} expected item score. Item score for a testlet model item is
+#'              the summed raw score of all assertions in the testlet, and expected item score is
+#'              the expected raw score calculated with Lord-Wingersky algorithm (see utility function for details)
+#'
+#' @param theta a scalar or a vector of student ability
+#' @param SA_dat For one student, a vector of response to standalone items.
+#' For more than one student, a matrix or dataframe of response to standalone items. One assertion per column.
+#' Column order must match row order in \code{SA_parm}. Use NA for missing responses
+#' @param Cluster_dat For one student, a vector of response to cluster items.
+#' For more than one student, a matrix or dataframe of response to cluster items. One assertion per column.
+#' Column order must match row order in \code{Cluster_parm}. Use NA for missing responses.
+#' @param SA_parm A matrix or dataframe of item parameters for standalone items, where columns are
+#'  a (slope), b1, b2, ..., b_k (difficulty or step difficulty), g (guessing), ItemID, and AssertionID.
+#'  Columns must follow the above order.
+#'  See \code{example_SA_parm} for an example. Use \code{?example_SA_parm} for detailed column descriptions
+#' @param Cluster_parm a matrix or dataframe of item parameters for cluster items, where columns are
+#'  a (slope), b (difficulty), cluster variance, cluster position, ItemID, and AssertionID.
+#'  Columns must follow the above order.
+#' @param Dv scaling factor for IRT model [1 or 1.7]
+#' @param n.nodes number of nodes used when integrating out the specific dimension
+#' @param missing_as_incorrect by default, missings (NAs) are treated as missing; if TRUE, missings are treated as incorrect
+#'
+#' @note If the test does not have SA items or Cluster items, use default (NULL) for the corresponding data and parameter arguments \cr\cr
+#' Rasch SA items can be treated as clusters. To do so, store SA item parameters in the \code{Cluster_parm} argument with 0 variances, and store all student responses in \code{Cluster_dat}
+#'
+#' @author Zhongtian Lin lzt713@gmail.com
+#' @examples
+#' data(example_SA_parm)
+#' data(example_Cluster_parm)
+#' sigma <- diag(c(1, sqrt(unique(example_Cluster_parm$cluster_var))))
+#' mu <- rep(0, nrow(sigma))
+#' thetas <- MASS::mvrnorm(7,mu,sigma)
+#' thetas[,1] <- seq(-3,3,1) #overall dimension theta values
+#' itmDat <- sim_data(thetas = thetas, SA_parm = example_SA_parm, Cluster_parm = example_Cluster_parm)
+#' SA_dat <- itmDat[,1:20]
+#' Cluster_dat <- itmDat[,-1:-20]
+#' rst <- item_residual(thetas[,1], SA_dat, Cluster_dat, example_SA_parm, example_Cluster_parm, n.nodes = 11)
+#' @export
 item_residual = function(theta, SA_dat=NULL, Cluster_dat=NULL, SA_parm=NULL, Cluster_parm=NULL, Dv=1, n.nodes = 21, missing_as_incorrect = F) {
-  if(is.null(SA_parm) & is.null(Cluster_parm)) {stop("No item found!!!")} 
-  if(is.null(SA_dat) & is.null(Cluster_dat)) {stop("No data found!!!")} 
-  
+  if(is.null(SA_parm) & is.null(Cluster_parm)) {stop("No item found!!!")}
+  if(is.null(SA_dat) & is.null(Cluster_dat)) {stop("No data found!!!")}
+
   if(!is.null(SA_dat)) SA_dat = matrix(as.matrix(SA_dat), nrow = length(theta))
   if(!is.null(Cluster_dat)) Cluster_dat = matrix(as.matrix(Cluster_dat), nrow = length(theta))
   combined_dat = cbind(SA_dat, Cluster_dat)
   if(any(rowSums(is.na(combined_dat)) == ncol(combined_dat))) {stop("one or more students did not respond to any item!!!")}
   if(missing_as_incorrect == T) combined_dat[is.na(combined_dat)] = 0  # recode if missing is treated as incorrect
-  
+
   rst = utility(theta=theta, SA_parm=SA_parm, Cluster_parm=Cluster_parm, Dv=Dv, n.nodes = n.nodes,
                           what = c("escore"))
   if (!is.null(Cluster_dat)) {

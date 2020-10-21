@@ -1,30 +1,35 @@
-####################  Lord and Wingersky algorithm with matrix operations ################################
-## Description:
-##  For N persons (theta values), this function computes the marginal probability of the raw scores for
-##  a cluster item (with J dichotomously scored assertions) modeled by the testlet model, where "marginal" means
-##  the nuisance dimension being integrated out
-
-## INPUT:
-## 1. cluster_var:  a vector of  of legnth J with repeated values of the cluster variance(e.g., rep(0.8, 9) for a 9-assertion item)
-##                  Alternativaly, a scalar value of the cluster variance for the item.
-## 2. a: a vector of length J for the a parameters
-## 3. b: a vector of of length J for the b parameters
-## 4. theta: a vector of thetas of length N
-## 5. n.node: number of nodes used when integrating out the specific dimension
-## 6. return_additional: if TRUE, return a list containing the mraginal probablity as well as some additional by-product of the function
-                        # such as the conditional probabilty tables (currently support: prob, qrob)
-
-## Return values:
-##  When return_additional=FALSE: returns the marginal probabilty of raws scores, which is
-##                                a J+1 by N matrix, where J+1 is the number of possible raw scores
-##  When return_additional=TRUE: a list containing the mraginal probablity (prk.marginal) as well as prob and qrob, where
-##                               prob is a N by n.nodes by J array containing the conditional probablity of correct
-##                               response for each theta at each node of the nuisance dimension, for each assertion, and
-##                               qrob = 1 - prob
-
-## Author: Zhongtian Lin
-## Last Updated: 09/21/2020
-#'@export
+#' Lord-Wingersky algorithm for computing the marginal probability of the raw scores
+#' @description
+#' For N persons (theta values), this function uses the algorithm by Lord & Wingersky (1984) to compute
+#' the marginal probability of the raw scores for
+#' a cluster item (with J dichotomously scored assertions) modeled by the Rasch testlet model, where the word "marginal" means
+#' integrating out the nuisance dimension from the conditional likelihood of the cluster items.
+#' @param cluster_var a vector of  of length J with repeated values of the cluster
+#' variance (e.g., rep(0.8, 9) for a 9-assertion cluster item).
+#' Alternativaly, a scalar value of the cluster variance for the item.
+#' @param a a vector of length J for the a (slope) parameters
+#' @param b a vector of of length J for the b (difficulty) parameters
+#' @param theta a vector of thetas of length N
+#' @param n.nodes number of nodes used when integrating out the specific dimension
+#' @param return_additional if TRUE, return a list containing the marginal probability as well
+#' as some additional by-product of the function such as the conditional probability tables. See \strong{Value} section for details.
+#' @param Dv scaling factor for IRT model (usually 1 or 1.7)
+#'
+#' @return When \code{return_additional = FALSE}, returns the marginal probability of raw scores, which is
+#' a J+1 by N matrix, where J+1 is the number of possible raw scores \cr
+#' When \code{return_additional = TRUE}, returns a list containing the marginal probability (\code{prk.marginal})
+#' as well as \code{prob} and \code{qrob}, where \code{qrob} is a N by \code{n.nodes} by J array containing the conditional probability
+#' of correct response for each theta at each node of the nuisance dimension for each assertion, and \code{qrob = 1 - prob}
+#' @references Lord, F. M., & Wingersky, M. S. (1984). Comparison of IRT true-score and equipercentile observed-score "equatings".
+#' \emph{Applied Psychological Measurement}, 8(4), 453-461.
+#' @author Zhongtian Lin lzt713@gmail.com
+#' @examples
+#' data(example_Cluster_parm)
+#' # Compute on the first cluster, for 5 students
+#' one_cluster_parm <- example_Cluster_parm[example_Cluster_parm$position == 1,]
+#' rst <- lord_wing(one_cluster_parm$cluster_var , one_cluster_parm$a, one_cluster_parm$b,
+#'  theta <- seq(-2,2,1), return_additional = TRUE)
+#' @export
 
 lord_wing = function(cluster_var, a, b, theta, n.nodes=21, return_additional=FALSE, Dv=1) {
   gq = statmod::gauss.quad.prob(n.nodes, dist = 'normal', sigma = 1)

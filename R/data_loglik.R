@@ -10,46 +10,57 @@
 #' will be computed, where the word marginal means integrating out the nuisance dimension from the conditional likelihood of
 #' the cluster items.
 #'
+#' @section Dependencies:
+#' \describe{
+#'  \item{statmod}
+#' }
+#'
 #' @param theta a scalar or a vector of student ability
 #' @param SA_dat For one student, a vector of response to standalone items.
 #' For more than one student, a matrix or dataframe of response to standalone items. One assertion per column.
-#' Column order must match row order in SA_parm. Use NA for missing responses
+#' Column order must match row order in \code{SA_parm}. Use NA for missing responses
 #' @param Cluster_dat For one student, a vector of response to cluster items.
 #' For more than one student, a matrix or dataframe of response to cluster items. One assertion per column.
-#' Column order must match row order in Cluster_parm. Use NA for missing responses
-#' @param SA_parm a matrix or dataframe of item parameters for standalone items, where columns are \cr\cr
-#'  a: slope \cr\cr
-#'  b1, b2, ..., b_k: difficulty or step difficulty. \cr
-#'  For GPCM items, b1, b2, ..., b_k are step difficulty parameters where k is the maximum possible score
-#'                            of the item that has the largest number of score categories in the test (Score starts from 0).
-#'                            For example, for two items with 3 and 4 categories (0,1,2 & 0,1,2,3), there should be column b1, b2 and b3, where
-#'                            for the first item, b3 should be set to NA \cr
-#'  For 3PL items, b1 is the difficulty parameter. All other b should be set to NA \cr\cr
-#'  g: gussing parameters for 3PL items. Set to NA for GPCM items \cr\cr
-#'  ItemID: Item IDs for SA items \cr\cr
-#'  AssertionID: Assertion IDs for SA items \cr\cr
-#'  ***Note that columns must be in the above order
-#' @param Cluster_parm a matrix or dataframe of a (slope), b (difficulty) and cluster variance parameters for each assertion,
-#'    a column of cluster position, a column of cluster ItemID, and a column of AssertionID for Cluster items.
-#'    Columns must be in the above order
+#' Column order must match row order in \code{Cluster_parm}. Use NA for missing responses.
+#' @param SA_parm a matrix or dataframe of item parameters for standalone items, where columns are
+#'  a (slope), b1, b2, ..., b_k (difficulty or step difficulty), g (guessing), ItemID, and AssertionID.
+#'  Columns must follow the above order.
+#'  See \code{example_SA_parm} for an example. Use \code{?example_SA_parm} for detailed column descriptions
+#' @param Cluster_parm a matrix or dataframe of item parameters for cluster items, where columns are
+#'  a (slope), b (difficulty), cluster variance, cluster position, ItemID, and AssertionID.
+#'  Columns must follow the above order.
+#'  See \code{example_Cluster_parm} for an example. Use \code{?example_Cluster_parm} for detailed column descriptions
 #' @param Dv scaling factor for IRT model (usually 1 or 1.7)
 #' @param n.nodes number of nodes used when integrating out the nuisance dimension
 #' @param return_additional if TRUE, returns data loglikelihood with some additional by-product of the function in a list. See \strong{Value} section for details\cr
 #' @param missing_as_incorrect by default, missings (NAs) are treated as missing; if TRUE, missings are treated as incorrect
 #'
-#' @return If \emph{return_additional} is FALSE, returns a dataframe with two columns: theta and marginalized data loglikelihood; \cr
-#' If \emph{return_additional} is TRUE, returns the dataframe of loglikelihood with following additional tables in a list \cr
-#' \emph{probs.SA}, probability of correct response for standalone items \cr
-#' \emph{probs.cluster}, (conditional) probability table of correct response for clusters at each given nodes \cr
-#' \emph{parms}, parameter tables in a list
+#' @return If \code{return_additional} is FALSE, returns a dataframe with two columns: theta and marginalized data loglikelihood; \cr
+#' If \code{return_additional} is TRUE, returns the dataframe of loglikelihood with following additional tables in a list \cr
+#' \code{probs.SA}, probability of correct response for standalone items \cr
+#' \code{probs.cluster}, (conditional) probability table of correct response for clusters at each given nodes \cr
+#' \code{parms}, parameter tables in a list
+#'
+#' @note If the test does not have SA items or Cluster items, use default (NULL) for the corresponding data and parameter arguments \cr\cr
+#' Rasch SA items can be treated as clusters. To do so, store SA item parameters in the \code{Cluster_parm} argument with 0 variances, and store all student responses in \code{Cluster_dat}
 #'
 #' @author Zhongtian Lin lzt713@gmail.com
-#' @note If the test does not have SA items or Cluster items, use default (NULL) for the corresponding data and parameter arguments \cr\cr
-#  SA items can be treated as clusters. To do so, store SA item parameters in the "Cluster_parm" argument with 0 variances, and store all student responses in "Cluster_dat"
 #' @examples
-#'
+#' data(example_SA_parm)
+#' data(example_Cluster_parm)
+#' sigma <- diag(c(1, sqrt(unique(example_Cluster_parm$cluster_var))))
+#' mu <- rep(0, nrow(sigma))
+#' thetas <- MASS::mvrnorm(7,mu,sigma)
+#' thetas[,1] <- seq(-3,3,1) #overall dimension theta values
+#' itmDat <- sim_data(thetas = thetas, SA_parm = example_SA_parm, Cluster_parm = example_Cluster_parm)
+#' SA_dat <- itmDat[,1:20]
+#' Cluster_dat <- itmDat[,-1:-20]
+#' rst <- data_loglik(thetas[,1], SA_dat, Cluster_dat, example_SA_parm, example_Cluster_parm, n.nodes = 11, return_additional = TRUE)
+#' rst$loglik
+#' rst$prob.SA
+#' length(rst$probs.cluster) # a list conditional probabilities. The length of the list = number of clusters
 #' @export
-data_loglik = function(theta, SA_dat=NULL, Cluster_dat=NULL, SA_parm=NULL, Cluster_parm=NULL, Dv=1, n.nodes = 21, return_additional=F, missing_as_incorrect = F) {
+data_loglik = function(theta, SA_dat=NULL, Cluster_dat=NULL, SA_parm=NULL, Cluster_parm=NULL, Dv=1, n.nodes = 21, return_additional=TRUE, missing_as_incorrect = F) {
   if(is.null(SA_parm) & is.null(Cluster_parm)) {stop("No item found!!!")}
   if(is.null(SA_dat) & is.null(Cluster_dat)) {stop("No data found!!!")}
   if((is.null(SA_parm) | is.null(SA_dat)) && (is.null(Cluster_parm) | is.null(Cluster_dat)))  {stop("Data or Parameter file missing!!!")}

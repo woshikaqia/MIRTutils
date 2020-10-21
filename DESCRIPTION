@@ -8,7 +8,10 @@ Description: More about what it does (maybe more than one line)
     Use four spaces when indenting paragraphs within the Description.
 Imports:
     statmod,
-    Rfast
+    Rfast,
+    stats,
+    MASS,
+    Rcpp
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
