@@ -74,6 +74,7 @@
 #' # person fit for the first student
 #' rst <- person_fit(est_theta, SA_dat[1,], Cluster_dat[1,], example_SA_parm, example_Cluster_parm, Alpha=c(0.01,0.05))
 #' @export
+#' @useDynLib MIRTutils
 person_fit = function(theta, SA_dat=NULL, Cluster_dat=NULL, SA_parm=NULL, Cluster_parm=NULL, Dv=1, Alpha=0.05, n.nodes = 100, n.ass.limit = 10, LW.nodes=21) {
   if(is.null(SA_parm) & is.null(Cluster_parm)) {stop("No item found!!!")}
   if(is.null(SA_dat) & is.null(Cluster_dat)) {stop("No data found!!!")}
