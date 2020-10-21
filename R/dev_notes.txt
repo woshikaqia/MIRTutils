@@ -1,0 +1,25 @@
+1. need utility function to compute:
+marginal and conditional probablity
+item score residual
+expected score
+item info
+...
+Use "what" argument (a character vector) to specify one or more utility
+
+Or do them saperately??
+
+2. need to test EAP and MAP for unidim. Then extend them for testlet model
+
+3. need to think about doing them for all student/item at once or one student/item at a time
+
+4. need vignette
+
+
+5 Scoring() 
+need more ways of SE computation
+
+6. person fit add
+
+7. write "example_SA_parm" and "example_cluster_parm" to show the format of parameters, and refer to it in other functions.
+
+8. Add a webpage for it, which will include model formula.

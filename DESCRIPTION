@@ -7,10 +7,11 @@ Maintainer: The package maintainer <yourself@somewhere.net>
 Description: More about what it does (maybe more than one line)
     Use four spaces when indenting paragraphs within the Description.
 Imports:
-	statmod
-License: What license is it under?
+    statmod,
+    Rfast
+License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.1.0
+RoxygenNote: 7.1.1
 URL: https://github.com/woshikaqia/MIRTutils
 BugReports: https://github.com/woshikaqia/MIRTutils/issues

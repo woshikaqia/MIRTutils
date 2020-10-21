@@ -1,7 +1,6 @@
 # specilzied multiplication function used in person_fit()
-library(Rcpp)
 func <- 'NumericMatrix mmult( NumericMatrix m , NumericVector v) {
-  if( ! m.ncol() == v.size() ) stop("Non-conformable arrays") ;
+  if( m.ncol() != v.size() ) stop("Non-conformable arrays") ;
   NumericMatrix out(m) ;
   for (int j = 0; j < m.ncol(); j++) {
     for (int i = 0; i < m.nrow(); i++) {
@@ -11,4 +10,4 @@ func <- 'NumericMatrix mmult( NumericMatrix m , NumericVector v) {
   return out ;
 }'
 #  Make it available
-cppFunction( func )
+Rcpp::cppFunction( func )
