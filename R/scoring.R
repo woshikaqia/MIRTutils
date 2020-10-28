@@ -102,7 +102,7 @@ scoring = function(SA_dat=NULL, Cluster_dat=NULL, SA_parm=NULL, Cluster_parm=NUL
 
   if(prod(rowSums(combined_dat, na.rm = TRUE) == 0)) {
     out = nlminb(censor[1], obj_fn, control = list(maxit = 0))
-  } else if (prod(rowSums(combined_dat, na.rm = TRUE) == ncol(combined_dat))) {
+  } else if (prod(rowSums(combined_dat, na.rm = TRUE) == possible)) {
     out = nlminb(censor[2], obj_fn, control = list(maxit = 0))
   } else {
     out = nlminb(start_val, obj_fn, control = list(rel.tol = 1e-10))
