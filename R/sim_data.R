@@ -109,7 +109,7 @@ sim_data = function(thetas, SA_parm=NULL, Cluster_parm=NULL, Dv=1) {
         p[,1] = 1 - rowSums(p,na.rm = TRUE)
         p
       }
-      probs.SA.gpc = mapply(gpcm, rep(list(theta),nrow(SA_parm_gpc)), a.gpc, b.gpc.list, maxscr)
+      probs.SA.gpc = mapply(gpcm, rep(list(theta),nrow(SA_parm_gpc)), a.gpc, b.gpc.list, maxscr, Dv)
       data.SA.gpc = sapply(probs.SA.gpc, function(x) {
         temp = sign(t(apply(x, 1, cumsum)) - runif(length(theta)))
         apply(temp, 1, function(y) which(y==1)[1]) - 1
