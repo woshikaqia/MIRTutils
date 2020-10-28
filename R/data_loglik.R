@@ -139,7 +139,7 @@ data_loglik = function(theta, SA_dat=NULL, Cluster_dat=NULL, SA_parm=NULL, Clust
         p[,1] = 1 - rowSums(p,na.rm = TRUE)
         p
       }
-      probs.SA.gpc = mapply(gpcm, rep(list(theta),nrow(SA_parm_gpc)), a.gpc, b.gpc.list, maxscr)
+      probs.SA.gpc = mapply(gpcm, rep(list(theta),nrow(SA_parm_gpc)), a.gpc, b.gpc.list, maxscr, Dv)
       names(probs.SA.gpc) = SA_parm_gpc$AssertionID
       SA_dat_gpc = matrix(SA_dat_gpc, nrow = length(theta))
       lik_table_observed.gpc = sapply(1:length(probs.SA.gpc), function(x) probs.SA.gpc[[x]][cbind(1:nrow(SA_dat_gpc),SA_dat_gpc[,x]+1)])
