@@ -50,10 +50,10 @@ a list of scoring results, where the first element is the estimated theta.
 }
 \description{
 Compute IRT latent score. Model currently supported are 1-3 PL, GPCM, Rasch Testlet,
-and a mix of these models. see \code{dat_loglik()} for model details.
+and a mix of these models. see \code{?MIRTutils} for model details.
 Scoring method currently supported are: \cr
  MMLE, marginal maximum likelihood estimation. When no Rasch testlet model item is involved,
- it reduce to regular MLE
+ it reduces to regular MLE
 }
 \note{
 If the test does not have SA items or Cluster items, use default (NULL) for the corresponding data and parameter arguments \cr\cr

@@ -6,11 +6,11 @@
 \alias{MIRTutils-package}
 \title{MIRT utility functions}
 \description{
-A set of functions to calculate some commonly used values when doing IRT analysis with new item types which
-may include item bundles. IRT model currently supported are 1-3 PL, GPCM, Rasch Testlet Model, and a mix of these models.
-Values can be computed includes the probability of correct response, item information,
+A set of functions to calculate some commonly used values when doing IRT analysis with new item types including
+item bundles. IRT model currently supported are 1-3 PL, GPCM, Rasch Testlet Model, and a mix of these models.
+Values that can be computed include the probability of correct response, item information,
 item score residuals, person scores, person fit index, etc.
-It also provides a function for multidimensional IRT data simulation
+It also provides a function for multidimensional IRT data simulation.
 }
 \details{
 This package computes some commonly needed results when doing dichotomous and polytomous
@@ -24,7 +24,7 @@ of traditional items assuming local dependence among assertions, whereas a clust
 The IRT model used is a special model similar to a Rasch Testlet model but allows for SA items to load only on the
 overall dimension. When there are only standalone items, the model reduces to a regular unidimensional IRT model, and
 all the values computed in this package fits to the traditional unidimensional IRT paradigm.
-When there are cluster items however, values computed are based on the new model described above.
+When there are only cluster items, the model reduces to a Rasch testlet model.
 Unlike the unidimensional model where theta is usually estimated
 by the univariate MLE, EAP or MAP, and the multidimensional model where theta is usually estimated by the multivarite
 MLE or EAP, most of the values computed by this package involving testlets is based on the marginal maximum
