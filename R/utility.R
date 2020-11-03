@@ -112,6 +112,9 @@ utility <- function(theta, SA_parm=NULL, Cluster_parm=NULL, Dv=1, n.nodes = 50, 
         info_SA_gpc = sapply(probs_SA_gpc,
                              function(y) apply(y, 1,
                                                function(x) (sum((seq_along(x)-1)^2*x) - sum((seq_along(x)-1)*x)^2)))
+        info_SA_gpc_names = names(probs_SA_gpc)
+        info_SA_gpc = matrix(info_SA_gpc,nrow = length(theta))
+        colnames(info_SA_gpc) = info_SA_gpc_names
         info_SA_gpc = sweep(info_SA_gpc, 2, (Dv * a.gpc)^2, "*")
       } else {
         info_SA_gpc= NULL
@@ -119,6 +122,9 @@ utility <- function(theta, SA_parm=NULL, Cluster_parm=NULL, Dv=1, n.nodes = 50, 
       # Expected score
       if ("escore" %in% what) {
         escore_SA_gpc = sapply(probs_SA_gpc, function(x) rowSums(sweep(x,2,0:(ncol(x)-1),"*")))
+        escore_SA_gpc_names = names(probs_SA_gpc)
+        escore_SA_gpc = matrix(escore_SA_gpc,nrow = length(theta))
+        colnames(escore_SA_gpc) = escore_SA_gpc_names
       } else {
         escore_SA_gpc = NULL
       }
