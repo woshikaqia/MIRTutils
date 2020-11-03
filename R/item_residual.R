@@ -1,7 +1,8 @@
 #' Item score residual
 #' @description Compute item score residual (i.e., item score \code{-} expected item score. Item score for a testlet model item is
 #'              the summed raw score of all assertions in the testlet, and expected item score is
-#'              the expected raw score calculated with Lord-Wingersky algorithm (see utility function for details)
+#'              the expected raw score calculated with Lord-Wingersky algorithm (See \code{?lord_wing} for details about the
+#'              algorithm).
 #'
 #' @param theta a scalar or a vector of student ability
 #' @param SA_dat For one student, a vector of response to standalone items.

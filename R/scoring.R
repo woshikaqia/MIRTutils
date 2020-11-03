@@ -1,9 +1,9 @@
 #' IRT person scoring
-#' @description Compute IRT latent score. Model currently supported are 1-3 PL, GPCM, Rasch Testlet,
-#' and a mix of these models. see \code{?MIRTutils} for model details.
+#' @description Compute IRT latent scores (theta estimates). Model currently supported are 1-3 PL, GPCM, Rasch Testlet,
+#' and a mix of these models. see \code{?MIRTutils} for model details. \cr
 #' Scoring method currently supported are: \cr
 #'  MMLE, marginal maximum likelihood estimation. When no Rasch testlet model item is involved,
-#'  it reduces to regular MLE
+#'  it reduces to regular MLE.
 #' @section Dependencies:
 #' \describe{
 #'  \item{statmod}

@@ -74,7 +74,7 @@ Calculates lz* person fit index. Model currently supported are 1-3 PL, GPCM, Ras
 If the test does not have SA items or Cluster items, use default (NULL) for the corresponding data and parameter arguments \cr\cr
 Rasch SA items can be treated as clusters. To do so, store SA item parameters in the \code{Cluster_parm}
 argument with 0 variances, and store all student responses in \code{Cluster_dat} \cr\cr
-This function should be run for one student at a time. Use parallel processing for higher processing speed.
+This function should be run for one student at a time. Use parallel processing for higher processing speed. \cr
 !!!!! With correction version 3: dll based correction using numerical integration for the cluster correction term \cr
 !!!!! Lord and Wingersky algorithm uses 21 nodes by default \cr
 !!!!! When computing the original vll, 11 nodes were used for the term that involves all possible response patterns \cr

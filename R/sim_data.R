@@ -2,13 +2,13 @@
 #' @description Simulate item response data based on IRT Models. Models currently supported are 1-3 PL, GPCM, Rasch Testlet,
 #' and a mix of these models.
 #' @param thetas
-#'      when tests only contain standalone items:
+#'      When tests contain only standalone items:
 #'          a vector of theta values where the length of thetas equals to the number
 #'          of students. Also works for a scalar theta value. \cr
-#'      when tests contain cluster items: \cr
+#'      When tests contain cluster items: \cr
 #'          In general: a matrix or dataframe of theta values when tests contain cluster item, where first column is
 #'                      theta for the overall dimension and the rest of columns are thetas for the specific (nuisance) dimensions \cr
-#'          Special case: when simulating for only one student and the test has cluster item, it can also be a vector of
+#'          Special case: when simulating for only one student and the test has cluster items, it can also be a vector of
 #'                        theta values, where the first element is the overall dimension theta and the rest are
 #'                        thetas for the specific (nuisance) dimensions.
 #' @param SA_parm A matrix or dataframe of item parameters for standalone items, where columns are

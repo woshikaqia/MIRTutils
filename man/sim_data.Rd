@@ -7,13 +7,13 @@
 sim_data(thetas, SA_parm = NULL, Cluster_parm = NULL, Dv = 1)
 }
 \arguments{
-\item{thetas}{when tests only contain standalone items:
+\item{thetas}{When tests contain only standalone items:
     a vector of theta values where the length of thetas equals to the number
     of students. Also works for a scalar theta value. \cr
-when tests contain cluster items: \cr
+When tests contain cluster items: \cr
     In general: a matrix or dataframe of theta values when tests contain cluster item, where first column is
                 theta for the overall dimension and the rest of columns are thetas for the specific (nuisance) dimensions \cr
-    Special case: when simulating for only one student and the test has cluster item, it can also be a vector of
+    Special case: when simulating for only one student and the test has cluster items, it can also be a vector of
                   theta values, where the first element is the overall dimension theta and the rest are
                   thetas for the specific (nuisance) dimensions.}
 

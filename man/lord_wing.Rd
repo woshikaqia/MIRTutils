@@ -23,7 +23,7 @@ Alternativaly, a scalar value of the cluster variance for the item.}
 
 \item{b}{a vector of of length J for the b (difficulty) parameters}
 
-\item{theta}{a vector of thetas of length N}
+\item{theta}{a vector of length N for the thetas}
 
 \item{n.nodes}{number of nodes used when integrating out the specific dimension}
 
@@ -40,9 +40,9 @@ as well as \code{prob} and \code{qrob}, where \code{qrob} is a N by \code{n.node
 of correct response for each theta at each node of the nuisance dimension for each assertion, and \code{qrob = 1 - prob}
 }
 \description{
-For N persons (theta values), this function uses the algorithm by Lord & Wingersky (1984) to compute
+For N persons (theta values), this function makes use of the recursive algorithm by Lord & Wingersky (1984) to compute
 the marginal probability of the raw scores for
-a cluster item (with J dichotomously scored assertions) modeled by the Rasch testlet model, where the word "marginal" means
+a cluster item (with J dichotomously scored assertions) modeled by the Rasch testlet model. The word "marginal" means
 integrating out the nuisance dimension from the conditional likelihood of the cluster items.
 }
 \examples{

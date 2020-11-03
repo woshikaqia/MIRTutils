@@ -1,15 +1,15 @@
 #' Lord-Wingersky algorithm for computing the marginal probability of the raw scores
 #' @description
-#' For N persons (theta values), this function uses the algorithm by Lord & Wingersky (1984) to compute
+#' For N persons (theta values), this function makes use of the recursive algorithm by Lord & Wingersky (1984) to compute
 #' the marginal probability of the raw scores for
-#' a cluster item (with J dichotomously scored assertions) modeled by the Rasch testlet model, where the word "marginal" means
+#' a cluster item (with J dichotomously scored assertions) modeled by the Rasch testlet model. The word "marginal" means
 #' integrating out the nuisance dimension from the conditional likelihood of the cluster items.
 #' @param cluster_var a vector of  of length J with repeated values of the cluster
 #' variance (e.g., rep(0.8, 9) for a 9-assertion cluster item).
 #' Alternativaly, a scalar value of the cluster variance for the item.
 #' @param a a vector of length J for the a (slope) parameters
 #' @param b a vector of of length J for the b (difficulty) parameters
-#' @param theta a vector of thetas of length N
+#' @param theta a vector of length N for the thetas
 #' @param n.nodes number of nodes used when integrating out the specific dimension
 #' @param return_additional if TRUE, return a list containing the marginal probability as well
 #' as some additional by-product of the function such as the conditional probability tables. See \strong{Value} section for details.
