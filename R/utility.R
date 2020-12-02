@@ -105,8 +105,8 @@ utility <- function(theta, SA_parm=NULL, Cluster_parm=NULL, Dv=1, n.nodes = 50, 
         p
       }
       # conditional prob
-      probs_SA_gpc = mapply(gpcm, rep(list(theta),nrow(SA_parm_gpc)), a.gpc, b.gpc.list, maxscr, Dv)
-      colnames(probs_SA_gpc) = SA_parm_gpc$AssertionID
+      probs_SA_gpc = mapply(gpcm, rep(list(theta),nrow(SA_parm_gpc)), a.gpc, b.gpc.list, maxscr, Dv, SIMPLIFY = FALSE)
+      names(probs_SA_gpc) = SA_parm_gpc$AssertionID
       # item info
       if ("iteminfo" %in% what) {
         info_SA_gpc = sapply(probs_SA_gpc,
