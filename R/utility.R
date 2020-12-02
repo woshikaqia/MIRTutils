@@ -54,8 +54,8 @@ utility <- function(theta, SA_parm=NULL, Cluster_parm=NULL, Dv=1, n.nodes = 50, 
     names(SA_parm)[2:(ncol(SA_parm)-3)] = paste0("b",2:(ncol(SA_parm)-3)-1)
 
     # Separate out 3PL and GPC item par
-    dich.pos = which(apply(is.na(SA_parm[grepl("^b",names(SA_parm))][,-1]), 1, prod) == 1)
-    poly.pos = which(apply(is.na(SA_parm[grepl("^b",names(SA_parm))][,-1]), 1, prod) == 0)
+    dich.pos = which(apply(is.na(as.matrix(SA_parm[grepl("^b",names(SA_parm))][,-1])), 1, prod) == 1)
+    poly.pos = which(apply(is.na(as.matrix(SA_parm[grepl("^b",names(SA_parm))][,-1])), 1, prod) == 0)
     SA_parm_3pl = SA_parm[dich.pos,]
     SA_parm_gpc = SA_parm[poly.pos,]
 
