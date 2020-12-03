@@ -73,8 +73,8 @@ sim_data = function(thetas, SA_parm=NULL, Cluster_parm=NULL, Dv=1) {
     names(SA_parm)[2:(ncol(SA_parm)-3)] = paste0("b",2:(ncol(SA_parm)-3)-1)
     # +++ Add SA_parm validity checks later
     # --- Separate out 3PL and GPC items ---
-    dich.pos = which(apply(is.na(SA_parm[grepl("^b",names(SA_parm))][,-1]), 1, prod) == 1)
-    poly.pos = which(apply(is.na(SA_parm[grepl("^b",names(SA_parm))][,-1]), 1, prod) == 0)
+    dich.pos = which(apply(as.matrix(is.na(SA_parm[grepl("^b",names(SA_parm))][,-1])), 1, prod) == 1)
+    poly.pos = which(apply(as.matrix(is.na(SA_parm[grepl("^b",names(SA_parm))][,-1])), 1, prod) == 0)
     SA_parm_3pl = SA_parm[dich.pos,]
     SA_parm_gpc = SA_parm[poly.pos,]
     if (nrow(SA_parm_3pl) != 0) {
@@ -109,7 +109,7 @@ sim_data = function(thetas, SA_parm=NULL, Cluster_parm=NULL, Dv=1) {
         p[,1] = 1 - rowSums(p,na.rm = TRUE)
         p
       }
-      probs.SA.gpc = mapply(gpcm, rep(list(theta),nrow(SA_parm_gpc)), a.gpc, b.gpc.list, maxscr, Dv)
+      probs.SA.gpc = mapply(gpcm, rep(list(theta),nrow(SA_parm_gpc)), a.gpc, b.gpc.list, maxscr, Dv, SIMPLIFY = FALSE)
       data.SA.gpc = sapply(probs.SA.gpc, function(x) {
         temp = sign(t(apply(x, 1, cumsum)) - runif(length(theta)))
         apply(temp, 1, function(y) which(y==1)[1]) - 1

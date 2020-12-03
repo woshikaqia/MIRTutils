@@ -94,8 +94,8 @@ data_loglik = function(theta, SA_dat=NULL, Cluster_dat=NULL, SA_parm=NULL, Clust
     names(SA_parm)[2:(ncol(SA_parm)-3)] = paste0("b",2:(ncol(SA_parm)-3)-1)
 
     # --- Separate out 3PL and GPC item par---
-    dich.pos = which(apply(is.na(SA_parm[grepl("^b",names(SA_parm))][,-1]), 1, prod) == 1)
-    poly.pos = which(apply(is.na(SA_parm[grepl("^b",names(SA_parm))][,-1]), 1, prod) == 0)
+    dich.pos = which(apply(as.matrix(is.na(SA_parm[grepl("^b",names(SA_parm))][,-1])), 1, prod) == 1)
+    poly.pos = which(apply(as.matrix(is.na(SA_parm[grepl("^b",names(SA_parm))][,-1])), 1, prod) == 0)
     SA_parm_3pl = SA_parm[dich.pos,]
     SA_parm_gpc = SA_parm[poly.pos,]
     # --- Separate out 3PL and GPC data ---
@@ -139,7 +139,7 @@ data_loglik = function(theta, SA_dat=NULL, Cluster_dat=NULL, SA_parm=NULL, Clust
         p[,1] = 1 - rowSums(p,na.rm = TRUE)
         p
       }
-      probs.SA.gpc = mapply(gpcm, rep(list(theta),nrow(SA_parm_gpc)), a.gpc, b.gpc.list, maxscr, Dv)
+      probs.SA.gpc = mapply(gpcm, rep(list(theta),nrow(SA_parm_gpc)), a.gpc, b.gpc.list, maxscr, Dv, SIMPLIFY = FALSE)
       names(probs.SA.gpc) = SA_parm_gpc$AssertionID
       SA_dat_gpc = matrix(SA_dat_gpc, nrow = length(theta))
       lik_table_observed.gpc = sapply(1:length(probs.SA.gpc), function(x) probs.SA.gpc[[x]][cbind(1:nrow(SA_dat_gpc),SA_dat_gpc[,x]+1)])
