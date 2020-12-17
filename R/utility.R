@@ -54,8 +54,8 @@ utility <- function(theta, SA_parm=NULL, Cluster_parm=NULL, Dv=1, n.nodes = 50, 
     names(SA_parm)[2:(ncol(SA_parm)-3)] = paste0("b",2:(ncol(SA_parm)-3)-1)
 
     # Separate out 3PL and GPC item par
-    dich.pos = which(apply(is.na(as.matrix(SA_parm[grepl("^b",names(SA_parm))][,-1])), 1, prod) == 1)
-    poly.pos = which(apply(is.na(as.matrix(SA_parm[grepl("^b",names(SA_parm))][,-1])), 1, prod) == 0)
+    dich.pos = which(apply(as.matrix(is.na(SA_parm[grepl("^b",names(SA_parm))][,-1])), 1, prod) == 1)
+    poly.pos = which(apply(as.matrix(is.na(SA_parm[grepl("^b",names(SA_parm))][,-1])), 1, prod) == 0)
     SA_parm_3pl = SA_parm[dich.pos,]
     SA_parm_gpc = SA_parm[poly.pos,]
 
@@ -64,12 +64,13 @@ utility <- function(theta, SA_parm=NULL, Cluster_parm=NULL, Dv=1, n.nodes = 50, 
       b = SA_parm_3pl$b1
       g = rep(1,length(theta)) %o% SA_parm_3pl$g
       lin_pred_SA = Dv * t(apply(outer(theta, b, "-"), 1, function(x) a*x))
+      lin_pred_SA = matrix(lin_pred_SA, ncol = length(a))
       # conditional prob
       probs_SA_3pl = g + (1 - g) * plogis(lin_pred_SA)
       colnames(probs_SA_3pl) = SA_parm_3pl$AssertionID
       # item info
       if ("iteminfo" %in% what) {
-        info_SA_3pl = (Dv*a)^2 * (1 - probs_SA_3pl)/probs_SA_3pl * ((probs_SA_3pl - g)/(1 - g))^2
+        info_SA_3pl = t((Dv * a)^2 * t(1 - probs_SA_3pl))/probs_SA_3pl * ((probs_SA_3pl - g)/(1 - g))^2
       } else {
         info_SA_3pl = NULL
       }
@@ -181,7 +182,7 @@ utility <- function(theta, SA_parm=NULL, Cluster_parm=NULL, Dv=1, n.nodes = 50, 
         info_CL[[k]] = -rowSums(t(prk.marginal) * -(numer/denom)^2)
         escore_CL[[k]] = colSums(prk.marginal * 0:n.ass)
       }
-      # marginal prob. This is seldomly used
+      # marginal prob
       if ("mprob" %in% what) {
         mprobs_CL[[k]] = t(do.call(cbind, lapply(probs_CL[[k]], function(x) x %*% whts)))
       }
