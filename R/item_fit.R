@@ -28,6 +28,12 @@
 #' See \strong{Value} section for details.
 #' @param sd_overall variance of the (overall) theta
 #' @param missing_code code for missing response
+#' @param fitplot_arg a named list of the arguments that can be specified when creating fit plots. Possible names are \cr
+#'  \code{binsize}, a numerical for the minimum size of bins when grouping students by their theta values
+#'  \code{collapsed}, a logical indicating whether to collapse the bins when
+#'  \code{LOT}, \code{HOT}, \code{BY}: when plotting expected ICC, a sequence of hypothetical theta is needed.
+#'  these arguments specify the lower bound, upper bound and the step when creating the sequence
+#'
 #' @note If the test does not have SA items or Cluster items, use default (NULL) for the corresponding data and parameter arguments. \cr\cr
 #' Rasch SA items can be treated as clusters. To do so, store SA item parameters in the \code{Cluster_parm} argument with 0 variances.
 #'
@@ -41,14 +47,30 @@
 #'
 #' @author Zhongtian Lin lzt713@gmail.com
 #' @examples
-#' data(example_SA_parm)
-#' data(example_Cluster_parm)
-#' theta <- seq(-3,3,1)
-#' rst <- utility(theta, example_SA_parm, example_Cluster_parm, n.nodes = 11)
+#' \dontrun{
+#' data("example_SA_parm")
+#' data("example_Cluster_parm")
+#' sigma <- diag(c(1, sqrt(unique(example_Cluster_parm$cluster_var))))
+#' mu <- rep(0, nrow(sigma))
+#' thetas <- MASS::mvrnorm(601,mu,sigma)
+#' thetas[,1] <- seq(-3,3,0.01) #overall dimension theta values
+#' itmDat <- sim_data(thetas = thetas, SA_parm = example_SA_parm, Cluster_parm = example_Cluster_parm)
+#' SA_dat <- itmDat[,1:17]
+#' Cluster_dat <- itmDat[,-1:-20]
+#' example_SA_parm = example_SA_parm[1:17,] # only 3pl items
+#' out_scoring <- list()
+#' for (i in 1:nrow(itmDat)) {
+#'   out_scoring[[i]] <- scoring(SA_dat[i,], Cluster_dat[i,], example_SA_parm, example_Cluster_parm, n.nodes = 11, SE=TRUE)
+#' }
+#' est_theta <- sapply(out_scoring, function(x) x$par)
+#' out = item_fit(SA_dat=SA_dat,Cluster_dat=Cluster_dat,SA_parm=example_SA_parm,Cluster_parm=example_Cluster_parm,
+#'                Dv=1,n.nodes=21,est_theta = est_theta, sd_overall=1,missing_code=NULL,
+#'                fitplot_arg = list(n_bin=25, binsize=50, collapsed=TRUE, LOT=-3, HOT=3, BY=0.01))
+#' }
 #' @export
 item_fit <- function(SA_dat=NULL,Cluster_dat=NULL,SA_parm=NULL,Cluster_parm=NULL,Dv=1,n.nodes=21,
                      est_theta = NULL, what=c("X2","G2","phi","fitplot"), sd_overall=1,missing_code=NULL,
-                     fitplot_arg = list(binsize=50)) {
+                     fitplot_arg = list(n_bin=25, binsize=50, collapsed=TRUE, LOT=-3, HOT=3, BY=0.01)) {
   # -------------------------------------------------
   # ------------ Data Cleansing ---------------------
   # -------------------------------------------------
@@ -64,12 +86,11 @@ item_fit <- function(SA_dat=NULL,Cluster_dat=NULL,SA_parm=NULL,Cluster_parm=NULL
     if(is.vector(Cluster_dat)) Cluster_dat = matrix(Cluster_dat, nrow = 1) else Cluster_dat = as.matrix(Cluster_dat)
     if (ncol(Cluster_dat) != nrow(Cluster_parm)) {stop("Number of items does not match between data and parameter file for cluster items")}
   }
-  if (nrow(combined_dat)!=1 & nrow(combined_dat)<30) warning("Number of students less than 30. Results may not be accurate!")
 
   combined_dat = cbind(SA_dat, Cluster_dat)
   if (any(rowSums(is.na(combined_dat)) == ncol(combined_dat))) {stop("one or more students did not respond to any item!!!")}
-  if (nrow(combined_dat)<30) warning("Number of students less than 30. Results may not be accurate!")
-  combined_dat[combined_dat == missing_code] <- NA
+  if (nrow(combined_dat)!=1 & nrow(combined_dat)<30) warning("Number of students less than 30. Results may not be accurate!")
+  if (!is.null(missing_code))  combined_dat[combined_dat == missing_code] <- NA
 
   if(!is.null(SA_parm)) {
     SA_parm = as.data.frame(SA_parm)
@@ -203,11 +224,12 @@ item_fit <- function(SA_dat=NULL,Cluster_dat=NULL,SA_parm=NULL,Cluster_parm=NULL
     }
 
     p_list = list()
+    n_bin = fitplot_arg$n_bin
     binsize = fitplot_arg$binsize
     for (i in 1:(ncol(combined_dat2)-1)) {
       temp_dat = combined_dat2[,c(i, ncol(combined_dat2))]
       temp_dat = temp_dat[!is.na(temp_dat[,1]),]
-      temp_dat = transform(temp_dat, bin = cut(temp_dat[,"est_theta"], binsize))
+      temp_dat = transform(temp_dat, bin = cut(temp_dat[,"est_theta"], n_bin))
       pd = by(temp_dat, list(temp_dat$bin), function (x)
         c(meanVal = mean(x[,1], na.rm = TRUE),
           count = nrow(x)))
@@ -217,7 +239,7 @@ item_fit <- function(SA_dat=NULL,Cluster_dat=NULL,SA_parm=NULL,Cluster_parm=NULL
                                as.numeric(sub("[^,]*,([^]]*)\\]", "\\1", pd$bin))))
 
       # collapse bins with counts smaller than binsize
-      if (collapsed) {
+      if (fitplot_arg$collapsed == TRUE) {
         pd0 = pd
         pd_temp = pd
         pd = data.frame(stringsAsFactors = FALSE)
@@ -229,7 +251,7 @@ item_fit <- function(SA_dat=NULL,Cluster_dat=NULL,SA_parm=NULL,Cluster_parm=NULL
             pd_chuck = pd_temp
             ind = nrow(pd_chuck)
           } else {
-            ind = which(cumsum(count_temp) >50)[1]
+            ind = which(cumsum(count_temp) > binsize)[1]
             pd_chuck = pd_temp[1:ind,]
           }
 
@@ -252,7 +274,7 @@ item_fit <- function(SA_dat=NULL,Cluster_dat=NULL,SA_parm=NULL,Cluster_parm=NULL
       }
 
       # prepare data for expected ICC curve
-      fixed_theta = seq(LOT, HOT, 0.1)
+      fixed_theta = seq(fitplot_arg$LOT, fitplot_arg$HOT, fitplot_arg$BY)
       if (names(temp_dat)[1] %in% SA_parm$AssertionID) {
         SA_parm_one = SA_parm[SA_parm$AssertionID==names(temp_dat)[1],]
         rst2 = utility(fixed_theta, SA_parm_one, NULL, Dv=Dv, n.nodes = n.nodes, what = "mprob")
@@ -276,20 +298,5 @@ item_fit <- function(SA_dat=NULL,Cluster_dat=NULL,SA_parm=NULL,Cluster_parm=NULL
   } else {fitplot=NULL}
 
   return(list(X2=X2, G2=G2, phi_diff=phi_diff, fitplot=p_list))
-
 }
 
-out = item_fit(SA_dat=SA_dat,Cluster_dat=Cluster_dat,SA_parm=SA_parm,Cluster_parm=Cluster_parm,Dv=1,n.nodes=21,
-               est_theta = rnorm(nrow(SA_dat)), sd_overall=1,missing_code="-1")
-
-data("example_SA_parm")
-sigma <- diag(c(1, sqrt(unique(example_Cluster_parm$cluster_var))))
-mu <- rep(0, nrow(sigma))
-thetas <- MASS::mvrnorm(7,mu,sigma)
-thetas[,1] <- seq(-3,3,1) #overall dimension theta values
-itemdata <- sim_data(thetas = thetas, SA_parm = example_SA_parm, Cluster_parm = example_Cluster_parm)
-SA_dat <- itemdata[,1:17]
-Cluster_dat <- itemdata[,-1:-20]
-example_SA_parm = example_SA_parm[1:17,]
-out = item_fit(SA_dat=SA_dat,Cluster_dat=Cluster_dat,SA_parm=example_SA_parm,Cluster_parm=example_Cluster_parm,Dv=1,n.nodes=21,
-               est_theta = rnorm(nrow(SA_dat)), sd_overall=1,missing_code="-1")
