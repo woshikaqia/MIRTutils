@@ -11,6 +11,8 @@ Imports:
     Rfast,
     stats,
     MASS,
+	ggplot2,
+	dplyr,
     Rcpp
 License: MIT + file LICENSE
 Encoding: UTF-8

@@ -290,7 +290,7 @@ item_fit <- function(SA_dat=NULL,Cluster_dat=NULL,SA_parm=NULL,Cluster_parm=NULL
       names(exp_icc)[2] = "prob"
 
       # make plots
-      p_list[[i]] = ggplot(pd, aes(x = xval, y = meanVal)) + geom_point() + geom_errorbar(aes(ymin=meanVal-1.96*SE, ymax=meanVal+1.96*SE)) +
+      p_list[[i]] = ggplot2::ggplot(pd, aes(x = xval, y = meanVal)) + geom_point() + geom_errorbar(aes(ymin=meanVal-1.96*SE, ymax=meanVal+1.96*SE)) +
         geom_line(data = exp_icc, aes(x = fixed_theta, y = prob), col = "red", lwd = 1) + xlab("Theta") + ylab("Probability/Proportion Correct") +
         ggtitle(var_name) + theme(plot.title = element_text(hjust = 0.5)) + xlim(c(-4, 4))
 

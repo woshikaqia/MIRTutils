@@ -33,7 +33,7 @@
 #' \code{RR} = N (number of students) by n (number of assertions) dataframe of assertion residuals \cr
 #' \code{LRR} = N by n dataframe of lower bound assertion residuals\cr
 #' \code{URR} = N by n dataframe of upper bound assertion residuals\cr
-#' If run for more than one students, returns an additional drift_output table in the list \cr
+#' If run for more than one students, returns an additional \code{drift_output} table in the list \cr
 #'
 #' @author Zhongtian Lin lzt713@gmail.com
 #' @examples
