@@ -11,7 +11,7 @@ scoring(
   Cluster_parm = NULL,
   Dv = 1,
   n.nodes = 21,
-  censor = c(-4, 4),
+  censor = c(-6, 6),
   correction_val = 0.5,
   SE = FALSE
 )
@@ -37,9 +37,11 @@ See \code{example_Cluster_parm} for an example. Use \code{?example_Cluster_parm}
 
 \item{n.nodes}{number of nodes used when integrating out the nuisance dimension}
 
-\item{censor}{when there's perfect or all wrong score, this is a 2-element vector of upper and lower limit of \cr
-1) starting value in point estimate optimization \cr
-2) pseudo parameter estimate used in SE computation to avoid extremely large SE estimate}
+\item{censor}{when there's perfect or all wrong score, this is a 2-element vector of lower and upper limit of
+estimated theta for such score patterns.\cr
+NOTE: This argument only censor the estimated theta for the perfect or all wrong scores. It dose not censor
+possible extreme theta values estimated from other score patterns. Perform censoring after running this code
+if a global censorship is desired.}
 
 \item{correction_val}{a value to add or subtract when there's perfect or all wrong score to avoid extremely large theta estimate}
 
@@ -60,9 +62,6 @@ If the test does not have SA items or Cluster items, use default (NULL) for the 
 Rasch SA items can be treated as clusters. To do so, store SA item parameters in the \code{Cluster_parm} argument with 0
 variances, and store all student responses in \code{Cluster_dat} \cr\cr
 This function should be run for one student at a time. Use parallel processing for higher processing speed.\cr\cr
-DONOTUSE: \cr
-SA_dat and Cluster_dat can be multi-row matrix/dataframe where it is one person per row. In that case, it simultaneously solves
-all thetas but it assumes thetas are not independent. So it shouldn't be used for scoring purpose.
 }
 \section{Dependencies}{
 

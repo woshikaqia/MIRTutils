@@ -22,9 +22,11 @@
 #'  See \code{example_Cluster_parm} for an example. Use \code{?example_Cluster_parm} for detailed column descriptions
 #' @param Dv scaling factor for IRT model (usually 1 or 1.7)
 #' @param n.nodes number of nodes used when integrating out the nuisance dimension
-#' @param censor when there's perfect or all wrong score, this is a 2-element vector of upper and lower limit of \cr
-#'      1) starting value in point estimate optimization \cr
-#'      2) pseudo parameter estimate used in SE computation to avoid extremely large SE estimate
+#' @param censor when there's perfect or all wrong score, this is a 2-element vector of lower and upper limit of
+#'      estimated theta for such score patterns.\cr
+#'      NOTE: This argument only censor the estimated theta for the perfect or all wrong scores. It dose not censor
+#'      possible extreme theta values estimated from other score patterns. Perform censoring after running this code
+#'      if a global censorship is desired.
 #' @param correction_val a value to add or subtract when there's perfect or all wrong score to avoid extremely large theta estimate
 #' @param SE if TRUE, returns standard error
 #'
@@ -53,7 +55,7 @@
 #' @export
 
 ##########################################################################################################
-scoring = function(SA_dat=NULL, Cluster_dat=NULL, SA_parm=NULL, Cluster_parm=NULL, Dv=1, n.nodes = 21, censor=c(-4,4), correction_val = 0.5, SE=FALSE) {
+scoring = function(SA_dat=NULL, Cluster_dat=NULL, SA_parm=NULL, Cluster_parm=NULL, Dv=1, n.nodes = 21, censor=c(-6,6), correction_val = 0.5, SE=FALSE) {
   if(is.null(SA_parm) & is.null(Cluster_parm)) {stop("No item found!!!")}
   if(is.null(SA_dat) & is.null(Cluster_dat)) {stop("No data found!!!")}
 
