@@ -34,9 +34,6 @@
 #' Rasch SA items can be treated as clusters. To do so, store SA item parameters in the \code{Cluster_parm} argument with 0
 #' variances, and store all student responses in \code{Cluster_dat} \cr\cr
 #' This function should be run for one student at a time. Use parallel processing for higher processing speed.\cr\cr
-#' DONOTUSE: \cr
-#' SA_dat and Cluster_dat can be multi-row matrix/dataframe where it is one person per row. In that case, it simultaneously solves
-#' all thetas but it assumes thetas are not independent. So it shouldn't be used for scoring purpose.
 #'
 #' @author Zhongtian Lin lzt713@gmail.com
 #' @examples
