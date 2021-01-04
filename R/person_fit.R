@@ -1,7 +1,7 @@
 #' Person fit index computation
 #' @description Calculates lz* person fit index. Model currently supported are 1-3 PL, GPCM, Rasch Testlet, and a mix of these models.
 #'              For traditional test (standalone items only), this is lz* described in Snijders (2001).
-#'              For Cluster items, this is a extension of lz* calculated by a proprietary method
+#'              For Cluster items, this is a extension of lz* calculated by a method
 #'              that extends the lz* to Rasch testlet model when theta is estimated by MMLE.
 #'
 #' @section Dependencies:
