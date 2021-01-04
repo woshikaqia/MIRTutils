@@ -2,7 +2,6 @@
 
 export(data_loglik)
 export(item_drift)
-export(item_fit)
 export(item_residual)
 export(lord_wing)
 export(mmult)
