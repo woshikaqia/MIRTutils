@@ -10,6 +10,7 @@
 #'  a: slope parameters for each assertion\cr\cr
 #'  b: difficulty parameters for each assertion\cr\cr
 #'  cluster_var: cluster variance parameters for each assertion\cr\cr
+#'  position: cluster (relative) position in the test\cr\cr
 #'  ItemID: Item IDs for each assertion\cr\cr
 #'  AssertionID: Assertion IDs for each assertion\cr\cr
 #'  ***\code{Cluster_parm} columns must follow the above order
