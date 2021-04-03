@@ -112,7 +112,7 @@ person_fit = function(theta, SA_dat=NULL, Cluster_dat=NULL, SA_parm=NULL, Cluste
       # SA_info_gpc = sum((Dv*a.gpc)^2 * sapply(probs.SA.gpc,function(x) sum(((seq_along(x)-1) - sum((seq_along(x)-1)*x))^2 * x)))
       probs.SA.gpc.deriv0 = lapply(probs.SA.gpc,function(x)  x * ((seq_along(x)-1) - sum((seq_along(x)-1)*x)) )
       probs.SA.gpc.deriv = mapply("*", Dv*a.gpc, probs.SA.gpc.deriv0)
-      correction_SA_gpc0 =  mapply(function(x,y) x * (log(y) + 1), probs.SA.gpc.deriv, probs.SA.gpc)
+      correction_SA_gpc0 =  mapply(function(x,y) x * (log(y) + 1), probs.SA.gpc.deriv, sapply(probs.SA.gpc, function(x) x[1,]))
       correction_SA_gpc = -sum(unlist(correction_SA_gpc0))
     } else {
       EXP_LL_SA_gpc = VAR_LL_SA_gpc = SA_info_gpc = correction_SA_gpc = 0
