@@ -86,7 +86,7 @@ sim_data = function(thetas, SA_parm=NULL, Cluster_parm=NULL, Dv=1) {
       colnames(probs.SA.3pl) = SA_parm_3pl$AssertionID
       UNI = replicate(length(b),runif(length(theta)))
       data.SA.3pl = ifelse(UNI<probs.SA.3pl, 1, 0)
-    } else {data.SA=NULL}
+    } else {data.SA.3pl=NULL}
 
     if (nrow(SA_parm_gpc) != 0) {
       a.gpc = SA_parm_gpc[,1]
