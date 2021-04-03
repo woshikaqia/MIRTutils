@@ -100,7 +100,7 @@ person_fit = function(theta, SA_dat=NULL, Cluster_dat=NULL, SA_parm=NULL, Cluste
       correction_SA_3pl = -rowSums( Dv*a *(probs.SA.3pl - g)/(1-g) * (1 - probs.SA.3pl) * log(probs.SA.3pl/(1 - probs.SA.3pl)))
       SA_info_3pl = sum((Dv*a)^2 * (1 - probs.SA.3pl)/probs.SA.3pl * ((probs.SA.3pl - g)/(1 - g))^2)
     } else {
-      correction_SA_3pl = SA_info_3pl = 0
+      EXP_LL_SA_3pl = VAR_LL_SA_3pl = correction_SA_3pl = SA_info_3pl = 0
     }
 
     if (nrow(SA_parm_gpc) != 0) {
