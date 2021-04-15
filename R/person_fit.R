@@ -144,7 +144,7 @@ person_fit = function(theta, SA_dat=NULL, Cluster_dat=NULL, SA_parm=NULL, Cluste
 
     Cluster_dat = matrix(as.matrix(Cluster_dat), nrow = length(theta))
     colnames(Cluster_dat) = paste0(Cluster_parm$ItemID, "_", Cluster_parm$Assertion_ID)
-    loglik_cluster = EXP_LL_cluster = VAR_LL_cluster = correction_CL = cluster_info = EXP_LL_cluster_new = list()
+    loglik_cluster = EXP_LL_cluster = VAR_LL_cluster = correction_CL = cluster_info = EXP_LL_cluster_new = EXP_LL_cluster_new2 = list()
     for (k in 1:length(unique(Cluster_parm$position))) {
       one_cluster_parm = Cluster_parm[Cluster_parm$position == k,]
       one_cluster_dat = Cluster_dat[,grep(paste0("^",unique(one_cluster_parm$ItemID)), colnames(Cluster_dat))]
@@ -160,96 +160,150 @@ person_fit = function(theta, SA_dat=NULL, Cluster_dat=NULL, SA_parm=NULL, Cluste
       mb = one_cluster_parm$b # b parameters for these assertions
       mtheta = theta  # students' theta in a vector
       n.ass = length(mb)
-      # Execute the Lord and Wingersky function
-      LW_results = lord_wing(cluster_var = mvars, a = ma, b = mb, theta = mtheta, n.nodes = LW.nodes, return_additional = TRUE, Dv=Dv)
-      prk.marginal = LW_results$prk.marginal
-      # probs = LW_results$probs
-      # qrobs = LW_results$qrobs
 
+      #======== Compute E(ll) ================
+      ### Execute the Lord and Wingersky function
+      prk = lord_wing(cluster_var = mvars, a = ma, b = mb, theta = mtheta, n.nodes = LW.nodes, return_additional = FALSE, Dv=Dv)
+      W0 = prk[[1]]$W0[-1,]
+      W1 = prk[[1]]$W1[-1,]
+      W2 = prk[[1]]$W2[-1,]
+      ### The first addend of the E(ll):  summation of p_jk *(theta - b_jk), then integrate out u
       EXP_LL_cluster_term1_temp = apply(probs * outer(matrix(replicate(n.nodes,mtheta), nrow = length(mtheta)), mb, "-"), c(1,2), sum)
       EXP_LL_cluster_term1 = EXP_LL_cluster_term1_temp %*% whts
 
+      ### The second addend of the E(ll): all the rest of the equation
+      # each raw score times each node u
       rawscores = 0:n.ass
-      rawscoresXnodes = rawscores %o% rescaled.nodes[,1]  # polish this later
-
+      rawscoresXnodes = rawscores %o% rescaled.nodes[,1]
+      # log of q_jk at each node
       temp1 = apply(log(qrobs), c(1,2), sum)
+      # raw score times nodes plus log of q_jk at each node at each raw score
       temp2 = lapply(1:nrow(rawscoresXnodes), function(x) sweep(temp1, 2, rawscoresXnodes[x,], "+"))
+      # take exp of above, integrate out u, and take log, at each raw score
       temp3 = do.call(cbind, lapply(temp2, function(x) log(exp(x) %*% whts)))
-      EXP_LL_cluster_term2 = rowSums(temp3 * t(prk.marginal))
+      EXP_LL_cluster_term2 = rowSums(temp3 * t(W0 %*% whts))
 
+      ### The E(ll)
       EXP_LL_cluster[[k]] = as.vector(EXP_LL_cluster_term1 + EXP_LL_cluster_term2)
 
+      #==== Compute E(ll) again with a small number ADDED to theta for the numerical differentiation part of the correction =====
+      ### Define the small number and new theta
       h = 1e-9
       mtheta_new = mtheta + h
-      # Execute the Lord and Wingersky function again for theta + small value
-      LW_results_new = lord_wing(cluster_var = mvars, a = ma, b = mb, theta = mtheta_new, n.nodes = LW.nodes, return_additional = T, Dv=Dv)
-      prk.marginal_new = LW_results_new$prk.marginal
-
+      ### Execute the Lord and Wingersky function again for theta + small value
+      prk_new = lord_wing(cluster_var = mvars, a = ma, b = mb, theta = mtheta_new, n.nodes = LW.nodes, return_additional = FALSE, Dv=Dv)
+      W0_new = prk_new[[1]]$W0[-1,]
+      ### Compute E(ll) new the same way as before
       loglik_output_one_cluster_new = data_loglik(mtheta_new, SA_dat=NULL, Cluster_dat=one_cluster_dat, SA_parm=NULL, Cluster_parm=one_cluster_parm, Dv=Dv, n.nodes = n.nodes, return_additional = TRUE)
       probs_new = loglik_output_one_cluster_new$probs.cluster[[1]]
       qrobs_new = 1 - probs_new
       qrobs_new[qrobs_new==0] = .Machine$double.xmin
-
       EXP_LL_cluster_term1_temp_new = apply(probs_new * outer(matrix(replicate(n.nodes,mtheta_new), nrow = length(mtheta_new)), mb, "-"), c(1,2), sum)
       EXP_LL_cluster_term1_new = EXP_LL_cluster_term1_temp_new %*% whts
-
       temp1_new = apply(log(qrobs_new), c(1,2), sum)
       temp2_new = lapply(1:nrow(rawscoresXnodes), function(x) sweep(temp1_new, 2, rawscoresXnodes[x,], "+"))
       temp3_new = do.call(cbind, lapply(temp2_new, function(x) log(exp(x) %*% whts)))
-      EXP_LL_cluster_term2_new = rowSums(temp3_new * t(prk.marginal_new))
-
+      EXP_LL_cluster_term2_new = rowSums(temp3_new * t(W0_new %*% whts))
       EXP_LL_cluster_new[[k]] = as.vector(EXP_LL_cluster_term1_new + EXP_LL_cluster_term2_new)
 
-      # Compute numerical differantiation of the correction term (from cluster items)
-      correction_CL[[k]] = -(EXP_LL_cluster_new[[k]] - EXP_LL_cluster[[k]]) / h
+      #==== Compute E(ll) again with a small number SUBTRACTED from theta for the numerical differentiation part of the correction =====
+      ### Define the new theta
+      mtheta_new2 = mtheta - h
+      ### Execute the Lord and Wingersky function again for theta + small value
+      prk_new2 = lord_wing(cluster_var = mvars, a = ma, b = mb, theta = mtheta_new2, n.nodes = LW.nodes, return_additional = FALSE, Dv=Dv)
+      W0_new2 = prk_new2[[1]]$W0[-1,]
+      ### Compute E(ll) new the same way as before
+      loglik_output_one_cluster_new2 = data_loglik(mtheta_new2, SA_dat=NULL, Cluster_dat=one_cluster_dat, SA_parm=NULL, Cluster_parm=one_cluster_parm, Dv=Dv, n.nodes = n.nodes, return_additional = TRUE)
+      probs_new2 = loglik_output_one_cluster_new2$probs.cluster[[1]]
+      qrobs_new2 = 1 - probs_new2
+      qrobs_new2[qrobs_new2==0] = .Machine$double.xmin
+      EXP_LL_cluster_term1_temp_new2 = apply(probs_new2 * outer(matrix(replicate(n.nodes,mtheta_new2), nrow = length(mtheta_new2)), mb, "-"), c(1,2), sum)
+      EXP_LL_cluster_term1_new2 = EXP_LL_cluster_term1_temp_new2 %*% whts
+      temp1_new2 = apply(log(qrobs_new2), c(1,2), sum)
+      temp2_new2 = lapply(1:nrow(rawscoresXnodes), function(x) sweep(temp1_new2, 2, rawscoresXnodes[x,], "+"))
+      temp3_new2 = do.call(cbind, lapply(temp2_new2, function(x) log(exp(x) %*% whts)))
+      EXP_LL_cluster_term2_new2 = rowSums(temp3_new2 * t(W0_new2 %*% whts))
+      EXP_LL_cluster_new2[[k]] = as.vector(EXP_LL_cluster_term1_new2 + EXP_LL_cluster_term2_new2)
 
-      # Compute Expected CSEM
-      ECSEM_term1 = t(sapply(temp2, exp))
-      ECSEM_term2 = outer(rawscores, as.vector(apply(probs, c(1,2), sum)), "-")
-      cluster_info[[k]] = -(t(-(((ECSEM_term1 * ECSEM_term2) %*% whts) / (ECSEM_term1 %*% whts))^2) %*% prk.marginal)
+      ### Compute numerical differentiation of the correction term
+      # correction_CL[[k]] = -(EXP_LL_cluster_new[[k]] - EXP_LL_cluster[[k]]) / h
+      correction_CL[[k]] = -(EXP_LL_cluster_new[[k]] - EXP_LL_cluster_new2[[k]]) / (2*h)
+
+      #========= Compute Expected Item Information ================
+      Einfo_term1 = t(sapply(temp2, exp))
+      Einfo_term2 = outer(rawscores, as.vector(apply(probs, c(1,2), sum)), "-")
+      cluster_info[[k]] = -(t(-(((Einfo_term1 * Einfo_term2) %*% whts) / (Einfo_term1 %*% whts))^2) %*% (W0 %*% whts))
+
+      #========= Compute E(ll^2) using the extended Lord Wingersky================
+      EXP_squared_LL = colSums(W2 + 2*as.vector(temp3)*W1 + as.vector(temp3^2)*W0) %*% whts
 
 
-      # Equation 2 in Tao's write up
-      EXP_squared_LL_term1 = EXP_LL_cluster_term1_temp^2 +
-        apply(probs * qrobs* (outer(matrix(replicate(n.nodes,mtheta), nrow = length(mtheta)), mb, "-"))^2, c(1,2), sum)
-      EXP_squared_LL_term1 = EXP_squared_LL_term1 %*% whts
-      EXP_squared_LL_term3 = temp3^2 %*% prk.marginal
-
-      if (n.ass<=n.ass.limit) { #if n.ass is small, use exact response patterns
-        loglik_output_one_cluster_small = data_loglik(mtheta, SA_dat=NULL, Cluster_dat=one_cluster_dat, SA_parm=NULL, Cluster_parm=one_cluster_parm, Dv=Dv, n.nodes = 11, return_additional = TRUE)
-        probs_small = loglik_output_one_cluster_small$probs.cluster[[1]]
-        qrobs_small = 1 - probs_small
-        qrobs_small[qrobs_small==0] = .Machine$double.xmin
-        # +++ pattern score based computation for EXP_squared_LL (in Tao's 08182020 document)
-        all_patterns = expand.grid(replicate(n.ass, 0:1, simplify = FALSE))
-        probs_matrix = aperm(probs_small, c(3,2,1))[,,1]
-        qrobs_matrix = aperm(qrobs_small, c(3,2,1))[,,1]
-        all_patterns_all_nodes_prob = lapply(1:ncol(probs_matrix), function(x) mmult(as.matrix(all_patterns), probs_matrix[,x]))
-        all_patterns_all_nodes_qrob = lapply(1:ncol(qrobs_matrix), function(x) mmult(as.matrix(1-all_patterns), qrobs_matrix[,x]))
-        # all_patterns_all_nodes_prob = lapply(1:ncol(probs_matrix), function(x) t(t(all_patterns) * probs_matrix[,x]))
-        # all_patterns_all_nodes_qrob = lapply(1:ncol(qrobs_matrix), function(x) t(t(1-all_patterns) * qrobs_matrix[,x]))
-        # all_patterns_all_nodes_prob = lapply(1:ncol(probs_matrix), function(x) sweep(all_patterns, 2, probs_matrix[,x], "*"))
-        # all_patterns_all_nodes_qrob = lapply(1:ncol(qrobs_matrix), function(x) sweep(1-all_patterns, 2, qrobs_matrix[,x], "*"))
-        all_patterns_all_nodes_pq = Map("+", all_patterns_all_nodes_prob, all_patterns_all_nodes_qrob)
-        all_patterns_pq_marginal = sapply(all_patterns_all_nodes_pq, Rfast::rowprods) %*% whts_small
-        # all_patterns_pq_marginal = sapply(all_patterns_all_nodes_pq, function(x) apply(x, 1, prod)) %*% whts
-        EXP_squared_LL_term2_multiplier2 = as.matrix(all_patterns) %*% (mtheta-mb)
-        EXP_squared_LL_term2_multiplier3 = as.matrix(as.vector(temp3)[rowSums(all_patterns)+1])
-        EXP_squared_LL_term2 = 2 * sum(all_patterns_pq_marginal * EXP_squared_LL_term2_multiplier2 * EXP_squared_LL_term2_multiplier3)
-      } else { #if n.ass is large, use simulated response patterns
-        EXP_squared_LL_term2_addend1 = EXP_LL_cluster_term1 * (temp3 %*% prk.marginal)
-        set.seed(1234)
-        thetas = cbind(mtheta,rnorm(5000, 0, sqrt(one_cluster_parm$cluster_var[1])))
-        sim_scores = sim_data(thetas, SA_parm=NULL, Cluster_parm=one_cluster_parm)
-        EXP_squared_LL_term2_addend2_p1_cor1 = as.vector(sim_scores %*% (mtheta-mb))
-        EXP_squared_LL_term2_addend2_p1_cor2 = as.vector(temp3)[rowSums(sim_scores)+1]
-        EXP_squared_LL_term2_addend2_p1 = cor(EXP_squared_LL_term2_addend2_p1_cor1, EXP_squared_LL_term2_addend2_p1_cor2)
-        EXP_squared_LL_term2_addend2_p2 = sqrt(EXP_squared_LL_term1 - EXP_LL_cluster_term1^2)
-        EXP_squared_LL_term2_addend2_p3 = sqrt(EXP_squared_LL_term3 - (temp3 %*% prk.marginal)^2)
-        EXP_squared_LL_term2_addend2 = EXP_squared_LL_term2_addend2_p1 * EXP_squared_LL_term2_addend2_p2 *EXP_squared_LL_term2_addend2_p3
-        EXP_squared_LL_term2 = 2 * (EXP_squared_LL_term2_addend1 + EXP_squared_LL_term2_addend2)
-      }
-      EXP_squared_LL = EXP_squared_LL_term1 + EXP_squared_LL_term2 + EXP_squared_LL_term3
+      # #========= Compute E(ll^2) using all possible patterns ================
+      # all_patterns = expand.grid(replicate(n.ass, 0:1, simplify = FALSE))
+      # probs_matrix = aperm(probs, c(3,2,1))[,,1]
+      # qrobs_matrix = aperm(qrobs, c(3,2,1))[,,1]
+      # all_patterns_all_nodes_prob = lapply(1:ncol(probs_matrix), function(x) mmult(as.matrix(all_patterns), probs_matrix[,x]))
+      # all_patterns_all_nodes_qrob = lapply(1:ncol(qrobs_matrix), function(x) mmult(as.matrix(1-all_patterns), qrobs_matrix[,x]))
+      # all_patterns_all_nodes_pq = Map("+", all_patterns_all_nodes_prob, all_patterns_all_nodes_qrob)
+      # all_patterns_pq_marginal = sapply(all_patterns_all_nodes_pq, Rfast::rowprods) %*% whts
+      # ttt = as.matrix(all_patterns) %*% (mtheta-mb)
+      # ttt = cbind(ttt, rowSums(all_patterns))
+      # version2 = sum(as.vector(all_patterns_pq_marginal) * (ttt[,1] + ttt[,3])^2)
+      #
+      # #========= Compute E(ll^2) using all possible patterns (alternative equation) ================
+      # all_patterns = expand.grid(replicate(n.ass, 0:1, simplify = FALSE))
+      # probs_matrix = aperm(probs, c(3,2,1))[,,1]
+      # qrobs_matrix = aperm(qrobs, c(3,2,1))[,,1]
+      # all_patterns_all_nodes_prob = lapply(1:ncol(probs_matrix), function(x) mmult(as.matrix(all_patterns), probs_matrix[,x]))
+      # all_patterns_all_nodes_qrob = lapply(1:ncol(qrobs_matrix), function(x) mmult(as.matrix(1-all_patterns), qrobs_matrix[,x]))
+      # all_patterns_all_nodes_pq = Map("+", all_patterns_all_nodes_prob, all_patterns_all_nodes_qrob)
+      # ttt = as.matrix(all_patterns) %*% (mtheta-mb)
+      # ttt = cbind(ttt, rowSums(all_patterns))
+      # aaa = sapply(all_patterns_all_nodes_pq, Rfast::rowprods) *
+      # as.vector((as.matrix(all_patterns) %*% (mtheta-mb) + temp3[ttt[,2]+1])^2)
+      # colSums(aaa) %*% whts
+      #
+      # #========= Compute E(ll^2) using all possible patterns (Equation 2 in Tao's original write up 08182020) ================
+      # EXP_squared_LL_term1 = EXP_LL_cluster_term1_temp^2 +
+      #   apply(probs * qrobs* (outer(matrix(replicate(n.nodes,mtheta), nrow = length(mtheta)), mb, "-"))^2, c(1,2), sum)
+      # EXP_squared_LL_term1 = EXP_squared_LL_term1 %*% whts
+      # EXP_squared_LL_term3 = temp3^2 %*% (W0 %*% whts)
+      #
+      # if (n.ass<=n.ass.limit) { #if n.ass is small, use exact response patterns
+      #   loglik_output_one_cluster_small = data_loglik(mtheta, SA_dat=NULL, Cluster_dat=one_cluster_dat, SA_parm=NULL, Cluster_parm=one_cluster_parm, Dv=Dv, n.nodes = 11, return_additional = TRUE)
+      #   probs_small = loglik_output_one_cluster_small$probs.cluster[[1]]
+      #   qrobs_small = 1 - probs_small
+      #   qrobs_small[qrobs_small==0] = .Machine$double.xmin
+      #   all_patterns = expand.grid(replicate(n.ass, 0:1, simplify = FALSE))
+      #   probs_matrix = aperm(probs_small, c(3,2,1))[,,1]
+      #   qrobs_matrix = aperm(qrobs_small, c(3,2,1))[,,1]
+      #   all_patterns_all_nodes_prob = lapply(1:ncol(probs_matrix), function(x) mmult(as.matrix(all_patterns), probs_matrix[,x]))
+      #   all_patterns_all_nodes_qrob = lapply(1:ncol(qrobs_matrix), function(x) mmult(as.matrix(1-all_patterns), qrobs_matrix[,x]))
+      #   # all_patterns_all_nodes_prob = lapply(1:ncol(probs_matrix), function(x) t(t(all_patterns) * probs_matrix[,x]))
+      #   # all_patterns_all_nodes_qrob = lapply(1:ncol(qrobs_matrix), function(x) t(t(1-all_patterns) * qrobs_matrix[,x]))
+      #   # all_patterns_all_nodes_prob = lapply(1:ncol(probs_matrix), function(x) sweep(all_patterns, 2, probs_matrix[,x], "*"))
+      #   # all_patterns_all_nodes_qrob = lapply(1:ncol(qrobs_matrix), function(x) sweep(1-all_patterns, 2, qrobs_matrix[,x], "*"))
+      #   all_patterns_all_nodes_pq = Map("+", all_patterns_all_nodes_prob, all_patterns_all_nodes_qrob)
+      #   all_patterns_pq_marginal = sapply(all_patterns_all_nodes_pq, Rfast::rowprods) %*% whts_small
+      #   # all_patterns_pq_marginal = sapply(all_patterns_all_nodes_pq, function(x) apply(x, 1, prod)) %*% whts
+      #   EXP_squared_LL_term2_multiplier2 = as.matrix(all_patterns) %*% (mtheta-mb)
+      #   EXP_squared_LL_term2_multiplier3 = as.matrix(as.vector(temp3)[rowSums(all_patterns)+1])
+      #   EXP_squared_LL_term2 = 2 * sum(all_patterns_pq_marginal * EXP_squared_LL_term2_multiplier2 * EXP_squared_LL_term2_multiplier3)
+      # } else {
+      # #========= Compute E(ll^2) using simulated response patterns, if n.ass is large ================
+      #   EXP_squared_LL_term2_addend1 = EXP_LL_cluster_term1 * (temp3 %*% (W0 %*% whts))
+      #   set.seed(1234)
+      #   thetas = cbind(mtheta,rnorm(5000, 0, sqrt(one_cluster_parm$cluster_var[1])))
+      #   sim_scores = sim_data(thetas, SA_parm=NULL, Cluster_parm=one_cluster_parm)
+      #   EXP_squared_LL_term2_addend2_p1_cor1 = as.vector(sim_scores %*% (mtheta-mb))
+      #   EXP_squared_LL_term2_addend2_p1_cor2 = as.vector(temp3)[rowSums(sim_scores)+1]
+      #   EXP_squared_LL_term2_addend2_p1 = cor(EXP_squared_LL_term2_addend2_p1_cor1, EXP_squared_LL_term2_addend2_p1_cor2)
+      #   EXP_squared_LL_term2_addend2_p2 = sqrt(EXP_squared_LL_term1 - EXP_LL_cluster_term1^2)
+      #   EXP_squared_LL_term2_addend2_p3 = sqrt(EXP_squared_LL_term3 - (temp3 %*% (W0 %*% whts))^2)
+      #   EXP_squared_LL_term2_addend2 = EXP_squared_LL_term2_addend2_p1 * EXP_squared_LL_term2_addend2_p2 *EXP_squared_LL_term2_addend2_p3
+      #   EXP_squared_LL_term2 = 2 * (EXP_squared_LL_term2_addend1 + EXP_squared_LL_term2_addend2)
+      # }
+      # EXP_squared_LL = EXP_squared_LL_term1 + EXP_squared_LL_term2 + EXP_squared_LL_term3
 
       EXP_LL_squared = EXP_LL_cluster[[k]]^2
       VAR_LL_cluster[[k]] = EXP_squared_LL - EXP_LL_squared
