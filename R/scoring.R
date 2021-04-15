@@ -78,7 +78,11 @@ scoring = function(SA_dat=NULL, Cluster_dat=NULL, SA_parm=NULL, Cluster_parm=NUL
 
   # -----starting values and extreme handling------
   # maxmium possible score  = number of item + extra score points from polytomous item
-  possible = ncol(combined_dat) + sum(!is.na(SA_parm[,c(-1,-2,-(ncol(SA_parm)-2):-ncol(SA_parm))])) #
+  if (!is.null(SA_parm)) {
+    possible = ncol(combined_dat) + sum(!is.na(SA_parm[,c(-1,-2,-(ncol(SA_parm)-2):-ncol(SA_parm))]))
+  } else {
+    possible = ncol(combined_dat)
+  }
   rawscore = rowSums(combined_dat, na.rm = TRUE)
   allperfect = which(rawscore==possible)
   allwrong = which(rawscore==0)
