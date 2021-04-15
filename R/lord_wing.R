@@ -17,9 +17,10 @@
 #'
 #' @return When \code{return_additional = FALSE}, returns the marginal probability of raw scores, which is
 #' a J+1 by N matrix, where J+1 is the number of possible raw scores \cr
-#' When \code{return_additional = TRUE}, returns a list containing the marginal probability (\code{prk.marginal})
+#' When \code{return_additional = TRUE}, returns a list containing the marginal probability (\code{prk})
 #' as well as \code{prob} and \code{qrob}, where \code{qrob} is a N by \code{n.nodes} by J array containing the conditional probability
-#' of correct response for each theta at each node of the nuisance dimension for each assertion, and \code{qrob = 1 - prob}
+#' of correct response for each theta at each node of the nuisance dimension for each assertion, \code{qrob = 1 - prob}, and
+#' \code{nodes} and \code{whts} are the nodes and weights used.
 #' @references Lord, F. M., & Wingersky, M. S. (1984). Comparison of IRT true-score and equipercentile observed-score "equatings".
 #' \emph{Applied Psychological Measurement}, 8(4), 453-461.
 #' @author Zhongtian Lin lzt713@gmail.com
@@ -47,30 +48,63 @@ lord_wing = function(cluster_var, a, b, theta, n.nodes=21, return_additional=FAL
   n.ass = length(b)
 
   # run for all persons
-  Ps = aperm(probs, c(3,2,1)) # permutate the conditional probabilities array so it's [assertion by nodes by person]
+  Ps = aperm(probs, c(3,2,1)) # permute the conditional probabilities array so it's [assertion by nodes by person]
   Qs = aperm(qrobs, c(3,2,1)) # 1-p
 
-  # Three lines below prepare a 5-dimenisonal array for LW calculation [assertion+2 by assertion+2 by assertion by nodes by person]
+  # Three lines below prepare a 5-dimensional array for LW calculation [assertion+2 by assertion+2 by assertion by nodes by person]
   PPs = rbind(cbind(rep(0,n.ass+1),diag(n.ass+1)),rep(0,n.ass+2)) %o% Ps
   QQs = rbind(rep(0,n.ass+2),cbind(rep(0,n.ass+1),diag(n.ass+1))) %o% Qs
   PQs = PPs + QQs
 
-  # prk.marginal: marginal probablity of raw scores for the item "k" (notation k stems from upper level function notation)
-  prk.marginal = sapply(1:dim(PQs)[5], function(z) { # sapply over the fifth dimension (the person dimension)
+  # prk: conditional (on nodes) results of the following quantities for a cluster k
+  #   W0: a matrix containing the probability of raw scores after seeing assertion j, where j = 1, 2, 3,..., n_k
+  #   W1: a matrix containing a special set of quantities after seeing assertion j, where j = 1, 2, 3,..., n_k.
+  #   W2: a matrix containing another special set of quantities similar to W1
+  # W1 and W2 are necessary components for computing the variance of loglikelihood of a cluster
+  prk = lapply(1:dim(PQs)[5], function(z) { # sapply over the fifth dimension (the person dimension)
     prk.cond.u = matrix(c(c(0,1),rep(0,n.ass)), dim(PQs)[1], dim(PQs)[4])
-    for (i in 1:n.ass) {
+    prk.cond.u_previous = matrix(c(c(0,1),rep(0,n.ass)), dim(PQs)[1], dim(PQs)[4])
+    prk.cond.u_W1 = matrix(0, dim(PQs)[1], dim(PQs)[4])
+    prk.cond.u_W1_previous = matrix(0, dim(PQs)[1], dim(PQs)[4])
+    prk.cond.u_W2 = matrix(0, dim(PQs)[1], dim(PQs)[4])
+    for (j in 1:n.ass) {
+
+      # These two components are necessary components for W1 and W2. They are previous step's
+      # W0 and W1 results with the last row removed and with an all 0 row added as the first row
+      prk.cond.u_previous = rbind(0, prk.cond.u_previous[-nrow(prk.cond.u_previous),])
+      prk.cond.u_W1_previous = rbind(0, prk.cond.u_W1_previous[-nrow(prk.cond.u_W1_previous),])
+
+      # W0
       prk.cond.u = matrix(c(c(rbind(prk.cond.u[,1:(dim(PQs)[4]-1)],matrix(0, dim(PQs)[1]*dim(PQs)[4], dim(PQs)[4]-1))), prk.cond.u[,dim(PQs)[4]]), dim(PQs)[1]*dim(PQs)[4], dim(PQs)[4])
-      PQs_u = PQs[,,i,1:dim(PQs)[4],z]
+      PQs_u = PQs[,,j,1:dim(PQs)[4],z]
       PQs_u = matrix(aperm(PQs_u, c(1,3,2)), dim(PQs)[1]*dim(PQs)[4], dim(PQs)[1])
       prk.cond.u = t(PQs_u) %*% prk.cond.u
-    }
-    as.vector(prk.cond.u[-1,] %*% whts)
-  })
 
-  # retrun additional by-product or not?
+      # W1
+      prk.cond.u_W1 = matrix(c(c(rbind(prk.cond.u_W1[,1:(dim(PQs)[4]-1)],matrix(0, dim(PQs)[1]*dim(PQs)[4], dim(PQs)[4]-1))), prk.cond.u_W1[,dim(PQs)[4]]), dim(PQs)[1]*dim(PQs)[4], dim(PQs)[4])
+      # t(PQs_u) %*% prk.cond.u_W1 # This is p_j* W1(j-1,r-1) + q*W1(j-1,r). Needed component 1 for W1
+      # Ps[j,,z] * (theta[z]- b[j])^2 # This p_j*(theta-b_j). Needed component 2 for W1
+      prk.cond.u_W1 = t(PQs_u) %*% prk.cond.u_W1 + sweep(prk.cond.u_previous, 2, (Ps[j,,z] * (theta[z] - b[j])), "*")
+
+      # W2
+      prk.cond.u_W2 = matrix(c(c(rbind(prk.cond.u_W2[,1:(dim(PQs)[4]-1)],matrix(0, dim(PQs)[1]*dim(PQs)[4], dim(PQs)[4]-1))), prk.cond.u_W2[,dim(PQs)[4]]), dim(PQs)[1]*dim(PQs)[4], dim(PQs)[4])
+      # t(PQs_u) %*% prk.cond.u_W2 # This is p_j* W2(j-1,r-1) + q*W2(j-1,r). Needed component 1 for W1
+      # Ps[j,,z] * (theta[z]- b[j])^2    # This p_j*(theta-b_j)^2 Needed component 2 for W2
+      # 2 * Ps[j,,z] * (theta[z] - b[j])  # This 2*p_j*(theta-b_j) Needed component 3 for W2
+      prk.cond.u_W2 = t(PQs_u) %*% prk.cond.u_W2 +
+        sweep(prk.cond.u_previous, 2, (Ps[j,,z] * (theta[z] - b[j])^2), "*") +
+        sweep(prk.cond.u_W1_previous, 2, (2*(Ps[j,,z] * (theta[z] - b[j]))), "*")
+
+      # Save for the next iteration
+      prk.cond.u_previous = prk.cond.u
+      prk.cond.u_W1_previous = prk.cond.u_W1
+    }
+    list(W0=prk.cond.u, W1=prk.cond.u_W1, W2=prk.cond.u_W2)
+  })
+  # return additional by-product or not?
   if(return_additional == TRUE) {
-    return(list(prk.marginal=prk.marginal, probs=probs, qrobs=qrobs))
+    return(list(prk=prk, probs=probs, qrobs=qrobs, nodes=nodes, whts=whts))
   } else {
-    return(prk.marginal)
+    return(prk)
   }
 }
