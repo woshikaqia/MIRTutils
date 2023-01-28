@@ -49,11 +49,12 @@ item_residual = function(theta, SA_dat=NULL, Cluster_dat=NULL, SA_parm=NULL, Clu
   if(missing_as_incorrect == T) combined_dat[is.na(combined_dat)] = 0  # recode if missing is treated as incorrect
 
   rst = utility(theta=theta, SA_parm=SA_parm, Cluster_parm=Cluster_parm, Dv=Dv, n.nodes = n.nodes,
-                          what = c("escore"))
+                what = c("escore"))
   if (!is.null(Cluster_dat)) {
     Cluster_dat2 = as.data.frame(Cluster_dat)
     names(Cluster_dat2) = Cluster_parm$ItemID
     Cluster_dat2 = split.default(Cluster_dat2, names(Cluster_dat2))
+    Cluster_dat2 = Cluster_dat2[as.character(unique(Cluster_parm$ItemID))]
     Cluster_dat2 = do.call(cbind, lapply(Cluster_dat2, rowSums))
     combined_dat = cbind(SA_dat, Cluster_dat2)
   }
