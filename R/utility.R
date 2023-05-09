@@ -168,7 +168,7 @@ utility <- function(theta, SA_parm=NULL, Cluster_parm=NULL, Dv=1, n.nodes = 50, 
         LW_results = lord_wing(cluster_var = mvars, a = ma, b = mb, theta = theta, n.nodes = n.nodes, return_additional = T, Dv=Dv)
         # probs_CL[[k]] = lapply(seq(dim(LW_results$probs)[1]), function(x) LW_results$probs[ x, , ])
         # # line above: list[[cluster]], list[person], row(node), col(assertion)
-        prk.marginal = LW_results$prk.marginal
+        prk.marginal = sapply(1:length(LW_results$prk), function(x) as.vector(LW_results$prk[[x]]$W0[-1,] %*% LW_results$whts))
         probs = LW_results$probs
         qrobs = LW_results$qrobs
         rawscores = 0:n.ass
