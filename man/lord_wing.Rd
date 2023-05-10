@@ -17,7 +17,7 @@ lord_wing(
 \arguments{
 \item{cluster_var}{a vector of  of length J with repeated values of the cluster
 variance (e.g., rep(0.8, 9) for a 9-assertion cluster item).
-Alternativaly, a scalar value of the cluster variance for the item.}
+Alternatively, a scalar value of the cluster variance for the item.}
 
 \item{a}{a vector of length J for the a (slope) parameters}
 
@@ -35,9 +35,10 @@ as some additional by-product of the function such as the conditional probabilit
 \value{
 When \code{return_additional = FALSE}, returns the marginal probability of raw scores, which is
 a J+1 by N matrix, where J+1 is the number of possible raw scores \cr
-When \code{return_additional = TRUE}, returns a list containing the marginal probability (\code{prk.marginal})
+When \code{return_additional = TRUE}, returns a list containing the marginal probability (\code{prk})
 as well as \code{prob} and \code{qrob}, where \code{qrob} is a N by \code{n.nodes} by J array containing the conditional probability
-of correct response for each theta at each node of the nuisance dimension for each assertion, and \code{qrob = 1 - prob}
+of correct response for each theta at each node of the nuisance dimension for each assertion, \code{qrob = 1 - prob}, and
+\code{nodes} and \code{whts} are the nodes and weights used.
 }
 \description{
 For N persons (theta values), this function makes use of the recursive algorithm by Lord & Wingersky (1984) to compute
