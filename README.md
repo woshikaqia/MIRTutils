@@ -171,7 +171,7 @@ as.vector(out_scoring$SE)  # estimated standard error
 person fit statistics for the first examinee.
 
 - For traditional test (i.e., standalone items only), this is lz\*
-  described in Snijders (2001).
+  described in Snijders (2001) or Sinharay (2016).
 - For Cluster items, this is lzt\* described in Lin et.al (2024), which
   extends the lz\* to the Rasch testlet model when theta is estimated by
   MMLE.
@@ -274,3 +274,8 @@ round(output$iteminfo,4)
     ## 5 0.3841 1.1173 0.7434 0.7283 0.1913
     ## 6 0.3316 0.9363 0.6588 0.4871 0.1358
     ## 7 0.2631 0.6274 0.5125 0.2611 0.0848
+
+## References
+ - Lin, Z., Jiang, T., Rijmen, F., & Van Wamelen, P. (2024). Asymptotically Correct Person Fit z-Statistics For the Rasch Testlet Model. _Psychometrika_,  https://doi.org/10.1007/s11336-024-09997-y
+ - Sinharay, S. (2016). Asymptotically correct standardization of person-fit statistics beyond dichotomous items. _Psychometrika_, 81(4), 992-1013.
+ - Snijders, T. A. (2001). Asymptotic null distribution of person fit statistics with estimated person parameter. _Psychometrika_, 66, 331-342.
